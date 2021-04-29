@@ -57,7 +57,6 @@ class TutaAccounts:
 
     def _create(self):
         self.driver.get("https://mail.tutanota.com/login")
-        # t.sleep(5)
         self._try_click('/html/body/div/div[3]/div[2]/div/div[3]/div/button')
         self._try_click(
             '/html/body/div/div[3]/div[2]/div/div[4]/div/div/div/button[1]')
@@ -72,7 +71,6 @@ class TutaAccounts:
             '#modal > div:nth-child(2) > div > div > div > div.flex-center.dialog-buttons > button:nth-child(2)', css=True)
         t.sleep(0.55)
         # Pass in input
-
         self.driver.find_element_by_xpath(
             '/html/body/div/div[2]/div/div/div/div/div/div[2]/div/div/div[2]/div/div[1]/div/div/div/div[1]/input').send_keys(self.username)
         t.sleep(0.05)
@@ -200,9 +198,6 @@ class Interia:
         # Create account btn
         self._try_click(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[2]/button")
-        t.sleep(0.25)
-        # self.driver.find_element_by_xpath(
-        # "/html/body/div[2]/div[3]/div[2]/div[2]/div/div[2]/div/div[2]/form/div[2]/input").send_keys(self.password)
         t.sleep(0.55)
         self._try_click(
             "/html/body/div[2]/div[3]/div/div[2]/div[1]")
