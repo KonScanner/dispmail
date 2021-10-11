@@ -2,5 +2,6 @@
 Disposable emails. Sign up for stuff without giving your personal information away.
 
 ## Requirements:
+- Install `requirements.txt`
 - [Selenium](https://www.selenium.dev/downloads/) webdriver
-- [Chromium](https://www.chromium.org/getting-involved/download-chromium) browser (or [Gecko](https://github.com/mozilla/geckodriver/releases) if you prefer)
+- [ChromeWebDriver](https://chromedriver.chromium.org/downloads) browser (or [Gecko](https://github.com/mozilla/geckodriver/releases) if you prefer)
