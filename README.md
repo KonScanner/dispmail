@@ -1,4 +1,4 @@
-# [DisMmail](https://konscanner.github.io/dispmail/)
+# [DispMail](https://konscanner.github.io/dispmail/)
 Disposable emails. Sign up for stuff without giving your personal information away.
 
 ## Requirements:
