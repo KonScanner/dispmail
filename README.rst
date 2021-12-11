@@ -7,8 +7,8 @@ Disposable emails. Sign up for stuff without giving your personal information aw
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. image:: https://readthedocs.org/projects/dispmail/badge/?version=latest
-:target: https://dispmail.readthedocs.io/en/latest/?badge=latest
-:alt: Documentation Status
+	:target: https://dispmail.readthedocs.io/en/latest/?badge=latest
+	:alt: Documentation Status
 
 .. contents::
 
