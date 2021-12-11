@@ -8,6 +8,11 @@ from selenium.webdriver.common.keys import Keys
 
 
 class Interia:
+
+    """
+    This function is used to register a new email on the Interia website.
+    """
+
     def __init__(self):
         self.driver = webdriver.Chrome(options=Config(headless=False).options)
         self.driver.maximize_window()
@@ -20,6 +25,12 @@ class Interia:
         self.actions = ActionChains(self.driver)
 
     def _try_click(self, x_path, css=False):
+        """
+        Tries to click on the element with a timer (dirty solution).
+
+        :param x_path: x_path of element
+        :param css: True if css element path, False if x_path. Default: False
+        """
         state = True
         for i in range(0, 6):
             if state:
@@ -40,21 +51,33 @@ class Interia:
         print(self.e)
 
     def _select_month(self):
+        """
+        Selects the month element and populates it.
+        """
         keytaps = "".join(
             [".key_down(Keys.DOWN)" for i in range(0, self.month)])
         eval(f"self.actions{keytaps}.send_keys(Keys.ENTER).perform()")
 
     def _select_clear(self):
+        """
+        Selects the clear element.
+        """
         keytaps = "".join(
             [".key_down(Keys.BACKSPACE)" for i in range(0, 100)])  # Arbitrary length
         eval(f"self.actions{keytaps}.perform()")
 
     def _select_gender(self):
+        """
+        Selects the gender of the email.
+        """
         keytaps = "".join(
             [".key_down(Keys.DOWN)" for i in range(0, random.randint(1, 2))])
         eval(f"self.actions{keytaps}.send_keys(Keys.ENTER).perform()")
 
     def _create(self):
+        """
+        Creates the email.
+        """
         self.driver.get(
             "https://konto-pocztowe.interia.pl/#/nowe-konto/darmowe")
         t.sleep(0.55)

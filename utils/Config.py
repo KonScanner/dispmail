@@ -2,6 +2,13 @@ from selenium import webdriver
 
 
 class Config:
+
+    """
+    The config class is used to set the browser options.
+
+    :param headless: Creates a headless session if True. Default is True.
+    """
+
     def __init__(self, headless: bool = True) -> None:
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4183.83 Safari/537.36"
         self.options = webdriver.ChromeOptions()

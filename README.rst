@@ -6,6 +6,10 @@
 Disposable emails. Sign up for stuff without giving your personal information away.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+.. image:: https://readthedocs.org/projects/dispmail/badge/?version=latest
+:target: https://dispmail.readthedocs.io/en/latest/?badge=latest
+:alt: Documentation Status
+
 .. contents::
 
 About

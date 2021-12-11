@@ -7,6 +7,11 @@ from selenium.webdriver.common.keys import Keys
 
 
 class TutaAccounts:
+
+    """
+    This function is used to register a new email on the TutaNota website.
+    """
+
     def __init__(self):
         self.driver = webdriver.Chrome(options=Config(headless=False).options)
         self.driver.maximize_window()
@@ -16,6 +21,12 @@ class TutaAccounts:
         self.password = pwd
 
     def _try_click(self, x_path, css=False):
+        """
+        Tries to click on the element with a timer (dirty solution).
+
+        :param x_path: x_path of element
+        :param css: True if css element path, False if x_path. Default: False
+        """
         state = True
         for i in range(0, 6):
             if state:
@@ -36,12 +47,15 @@ class TutaAccounts:
         print(self.e)
 
     def _create(self):
+        """
+        Creates the email.
+        """
         self.driver.get("https://mail.tutanota.com/login")
         self._try_click('/html/body/div/div[3]/div[2]/div/div[3]/div/button')
         self._try_click(
             '/html/body/div/div[3]/div[2]/div/div[4]/div/div/div/button[1]')
         self._try_click(
-            '#upgrade-account-dialog > div.flex.center-horizontally.wrap > div:nth-child(1) > div.buyOptionBox > div.button-min-height > button > div',css=True)
+            '#upgrade-account-dialog > div.flex.center-horizontally.wrap > div:nth-child(1) > div.buyOptionBox > div.button-min-height > button > div', css=True)
         self._try_click(
             '#modal > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1) > div > input[type=checkbox]', css=True)
         self._try_click(
@@ -68,7 +82,7 @@ class TutaAccounts:
         self._try_click(
             '/html/body/div/div[2]/div/div/div/div/div/div[2]/div/div/div[2]/div/div[5]/button')
         response = input("Was the account successfully created?")
-        
+
         if response == "y":
             write_if_complete(email=self.username,
                               password=self.password, domain="tutanota")
