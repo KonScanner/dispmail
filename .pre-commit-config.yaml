@@ -1,4 +1,5 @@
 # black
+repos:
 - repo: https://github.com/ambv/black
   rev: stable
   hooks:
