@@ -2,9 +2,10 @@ from utils.Config import Config
 from selenium import webdriver
 import time as t
 import random
-from utils.helper_functions import *
+from utils.helper_functions import credential_creator, birthday_creator, write_if_complete
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 class Interia:
@@ -14,7 +15,9 @@ class Interia:
     """
 
     def __init__(self):
-        self.driver = webdriver.Chrome(options=Config(headless=False).options)
+        self.driver = webdriver.Chrome(
+            ChromeDriverManager().install(), options=Config(headless=False).options
+        )
         self.driver.maximize_window()
         self.e = None
         (fullname, email, pwd) = credential_creator(fullname=False)
@@ -38,8 +41,7 @@ class Interia:
                     if not css:
                         self.driver.find_element_by_xpath(x_path).click()
                     else:
-                        self.driver.find_element_by_css_selector(
-                            x_path).click()
+                        self.driver.find_element_by_css_selector(x_path).click()
                         t.sleep(1)
                     state = False
                     print(state)
@@ -54,97 +56,98 @@ class Interia:
         """
         Selects the month element and populates it.
         """
-        keytaps = "".join(
-            [".key_down(Keys.DOWN)" for i in range(0, self.month)])
+        keytaps = "".join([".key_down(Keys.DOWN)" for i in range(0, self.month)])
         eval(f"self.actions{keytaps}.send_keys(Keys.ENTER).perform()")
 
     def _select_clear(self):
         """
         Selects the clear element.
         """
-        keytaps = "".join(
-            [".key_down(Keys.BACKSPACE)" for i in range(0, 100)])  # Arbitrary length
+        keytaps = "".join([".key_down(Keys.BACKSPACE)" for i in range(0, 100)])  # Arbitrary length
         eval(f"self.actions{keytaps}.perform()")
 
     def _select_gender(self):
         """
         Selects the gender of the email.
         """
-        keytaps = "".join(
-            [".key_down(Keys.DOWN)" for i in range(0, random.randint(1, 2))])
+        keytaps = "".join([".key_down(Keys.DOWN)" for i in range(0, random.randint(1, 2))])
         eval(f"self.actions{keytaps}.send_keys(Keys.ENTER).perform()")
 
     def _create(self):
         """
         Creates the email.
         """
-        self.driver.get(
-            "https://konto-pocztowe.interia.pl/#/nowe-konto/darmowe")
+        self.driver.get("https://konto-pocztowe.interia.pl/#/nowe-konto/darmowe")
         t.sleep(0.55)
         self._try_click("/html/body/div[3]/div[2]/button[3]")
         # Pass in input
 
         self.driver.find_element_by_xpath(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[1]/input").send_keys(self.first)
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[1]/input"
+        ).send_keys(self.first)
         t.sleep(0.3)
         self.driver.find_element_by_xpath(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[2]/input").send_keys(self.last)
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[2]/input"
+        ).send_keys(self.last)
         t.sleep(0.3)
         # Day of birth
         self.driver.find_element_by_xpath(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[1]/input").send_keys(self.day)
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[1]/input"
+        ).send_keys(self.day)
         t.sleep(0.3)
         # Day of month
         self._try_click(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[2]/div[2]")
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[2]/div[2]"
+        )
         self._select_month()
         t.sleep(0.3)
         # Day of Year
         self.driver.find_element_by_xpath(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[3]/input").send_keys(self.year)
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[3]/input"
+        ).send_keys(self.year)
         t.sleep(0.3)
-        self._try_click(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[4]/div[2]")
+        self._try_click("/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[4]/div[2]")
         self._select_gender()
-        username_tag = "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[5]/div[1]/input"
-        self.driver.find_element_by_xpath(
-            username_tag).click()
+        username_tag = (
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[5]/div[1]/input"
+        )
+        self.driver.find_element_by_xpath(username_tag).click()
         self._select_clear()
         t.sleep(0.3)
-        self.driver.find_element_by_xpath(
-            username_tag).send_keys(self.username)
+        self.driver.find_element_by_xpath(username_tag).send_keys(self.username)
         t.sleep(0.3)
 
         self.driver.find_element_by_xpath(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[6]/div/input").send_keys(self.password)
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[6]/div/input"
+        ).send_keys(self.password)
         t.sleep(0.3)
 
         self.driver.find_element_by_xpath(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[7]/div/input").send_keys(self.password)
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[7]/div/input"
+        ).send_keys(self.password)
         t.sleep(0.3)
         self._try_click(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[2]/div[1]/div[1]/label")
+            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[2]/div[1]/div[1]/label"
+        )
         t.sleep(0.3)
         t.sleep(5)
-        self.driver.execute_script(
-            "window.scrollTo(0, document.body.scrollHeight);")
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
         # Create account btn
-        self._try_click(
-            "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[2]/button")
+        self._try_click("/html/body/div[1]/div/div/div/div/div[2]/div/form/div[2]/button")
         t.sleep(0.55)
+        self._try_click("/html/body/div[2]/div[3]/div/div[2]/div[1]")
         self._try_click(
-            "/html/body/div[2]/div[3]/div/div[2]/div[1]")
-        self._try_click(
-            "/html/body/div[2]/section[3]/div[1]/div[1]/section/ul/li/div[2]/div[1]/div[1]/span")
-        self._try_click(
-            "/html/body/div[2]/section[4]/div/div/div[1]/div/div/span/div")
+            "/html/body/div[2]/section[3]/div[1]/div[1]/section/ul/li/div[2]/div[1]/div[1]/span"
+        )
+        self._try_click("/html/body/div[2]/section[4]/div/div/div[1]/div/div/span/div")
         self._try_click("/html/body/div[2]/section[4]/div/div/div[2]/div/a[2]")
         print("Was the account successfully created?")
         response = input()
         if response == "y":
-            write_if_complete(email=self.username,
-                              password=self.password, domain="interia", country="pl")
+            write_if_complete(
+                email=self.username, password=self.password, domain="interia", country="pl"
+            )
             self.driver.quit()
         else:
             self.driver.quit()
