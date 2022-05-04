@@ -20,8 +20,13 @@ def credential_creator(fullname=False):
     fullname = Faker().name()
     email = fullname.replace(" ", "") + str(integer_ran)
 
-    password = hashlib.sha224(
-        b"Nobody inspects the spammish repetition" + bytes(integer_ran)).hexdigest()[0:12] + "!"
+    password = (
+        hashlib.sha224(
+            b"Nobody inspects the spammish repetition" + bytes(integer_ran)
+        ).hexdigest()[:12]
+        + "!"
+    )
+
     return (fullname, email, password)
 
 
@@ -50,8 +55,7 @@ def write_if_complete(email: str, password: str, domain: str, country="com") -> 
 
     :rtpye: [None]
     """
-    if user_path == None:
+    if user_path is None:
         user_path = os.getcwd()
-    f = open(f"{user_path}/accounts.txt", "a+")
-    f.write(f"{email}@{domain}.{country}:{password}\n")
-    f.close()
+    with open(f"{user_path}/accounts.txt", "a+") as f:
+        f.write(f"{email}@{domain}.{country}:{password}\n")

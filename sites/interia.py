@@ -35,7 +35,7 @@ class Interia:
         :param css: True if css element path, False if x_path. Default: False
         """
         state = True
-        for i in range(0, 6):
+        for _ in range(6):
             if state:
                 try:
                     if not css:
@@ -48,29 +48,30 @@ class Interia:
                 except Exception as e:
                     self.e = e
                     t.sleep(1.5)
-            else:
-                continue
         print(self.e)
 
     def _select_month(self):
         """
         Selects the month element and populates it.
         """
-        keytaps = "".join([".key_down(Keys.DOWN)" for i in range(0, self.month)])
+        keytaps = "".join([".key_down(Keys.DOWN)" for _ in range(self.month)])
         eval(f"self.actions{keytaps}.send_keys(Keys.ENTER).perform()")
 
     def _select_clear(self):
         """
         Selects the clear element.
         """
-        keytaps = "".join([".key_down(Keys.BACKSPACE)" for i in range(0, 100)])  # Arbitrary length
+        keytaps = "".join([".key_down(Keys.BACKSPACE)" for _ in range(100)])
         eval(f"self.actions{keytaps}.perform()")
 
     def _select_gender(self):
         """
         Selects the gender of the email.
         """
-        keytaps = "".join([".key_down(Keys.DOWN)" for i in range(0, random.randint(1, 2))])
+        keytaps = "".join(
+            [".key_down(Keys.DOWN)" for _ in range(random.randint(1, 2))]
+        )
+
         eval(f"self.actions{keytaps}.send_keys(Keys.ENTER).perform()")
 
     def _create(self):
@@ -148,6 +149,4 @@ class Interia:
             write_if_complete(
                 email=self.username, password=self.password, domain="interia", country="pl"
             )
-            self.driver.quit()
-        else:
-            self.driver.quit()
+        self.driver.quit()
