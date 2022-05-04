@@ -31,7 +31,7 @@ class TutaAccounts:
         :param css: True if css element path, False if x_path. Default: False
         """
         state = True
-        for i in range(0, 6):
+        for _ in range(6):
             if state:
                 try:
                     if not css:
@@ -44,8 +44,6 @@ class TutaAccounts:
                 except Exception as e:
                     self.e = e
                     t.sleep(1.5)
-            else:
-                continue
         print(self.e)
 
     def _create(self):
@@ -107,6 +105,4 @@ class TutaAccounts:
 
         if response == "y":
             write_if_complete(email=self.username, password=self.password, domain="tutanota")
-            self.driver.quit()
-        else:
-            self.driver.quit()
+        self.driver.quit()
