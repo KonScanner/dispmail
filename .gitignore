@@ -1,5 +1,6 @@
 # User accounts
 accounts.txt
+accounts_personal.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
