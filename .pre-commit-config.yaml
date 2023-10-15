@@ -20,7 +20,7 @@ repos:
           build|
           dist"""
 
-      language_version: python3.9.7
+      language_version: python3.10
 
 # flake8
 - repo: https://github.com/pre-commit/pre-commit-hooks

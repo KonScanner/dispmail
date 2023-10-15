@@ -2,9 +2,10 @@ from utils.Config import Config
 from selenium import webdriver
 import time as t
 from utils.helper_functions import credential_creator, write_if_complete
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 class TutaAccounts:
@@ -23,13 +24,15 @@ class TutaAccounts:
         self.username = email
         self.password = pwd
 
-    def _try_click(self, x_path, css=False):
+    def _try_click(self, x_path, css=False, prompt=""):
         """
         Tries to click on the element with a timer (dirty solution).
 
         :param x_path: x_path of element
         :param css: True if css element path, False if x_path. Default: False
         """
+        if prompt != "":
+            logging.info(f"[ACTION]: {prompt}")
         state = True
         for _ in range(6):
             if state:
@@ -44,20 +47,27 @@ class TutaAccounts:
                 except Exception as e:
                     self.e = e
                     t.sleep(1.5)
-        print(self.e)
+        logging.error(f"Failed to click with exception {self.e}")
 
     def _create(self):
         """
         Creates the email.
         """
+        # Load site
         self.driver.get("https://mail.tutanota.com/login")
-        self._try_click("/html/body/div/div[3]/div[2]/div/div[3]/div/button")
-        self._try_click("/html/body/div/div[3]/div[2]/div/div[4]/div/div/div/button[1]")
+
+        # Click Sign-up
         self._try_click(
-            "#upgrade-account-dialog > div.flex.center-horizontally.wrap > div:nth-child(1) >"
-            " div.buyOptionBox > div.button-min-height > button > div",
-            css=True,
+            "/html/body/div/div[3]/div[2]/div/div[1]/div[2]/button[1]/div/div",
+            prompt="Click Sign-up",
         )
+
+        # Free version
+        self._try_click(
+            "/html/body/div/div[2]/div/div/div/div/div/div[2]/div/div/div[2]/div/div[3]/div[1]/div/div[1]/div[5]/button/div"
+        )
+
+        # Checkboxes
         self._try_click(
             "#modal > div:nth-child(2) > div > div > div > div:nth-child(2) > div:nth-child(1) >"
             " div > input[type=checkbox]",
@@ -76,19 +86,24 @@ class TutaAccounts:
         )
         t.sleep(0.55)
         # Pass in input
+
+        # Pass in username
         self.driver.find_element_by_css_selector(
             "#signup-account-dialog > div > div.text-field.rel.overflow-hidden.text.pt > div > div"
             " > div > div.flex-grow.rel > input"
         ).send_keys(self.username)
-        t.sleep(0.05)
+        t.sleep(0.15)
+
+        # Pass in password
         self.driver.find_element_by_css_selector(
             "#signup-account-dialog > div > div:nth-child(2) > div:nth-child(1) > div > div > div >"
             " div.flex-grow.rel > input.input"
         ).send_keys(self.password)
-        t.sleep(0.05)
+        t.sleep(0.15)
+
+        # Pass in repeat password
         self.driver.find_element_by_css_selector(
-            "#signup-account-dialog > div > div:nth-child(2) > div:nth-child(3) > div > div > div >"
-            " div > input"
+            "#signup-account-dialog > div > div:nth-child(2) > div:nth-child(2) > div > div > div > div.flex-grow.rel > input"
         ).send_keys(self.password)
         t.sleep(0.15)
         self._try_click(
@@ -101,8 +116,8 @@ class TutaAccounts:
         self._try_click(
             "/html/body/div/div[2]/div/div/div/div/div/div[2]/div/div/div[2]/div/div[5]/button"
         )
-        response = input("Was the account successfully created?")
+        response = input("Was the account successfully created? [y/n] ")
 
-        if response == "y":
+        if response.lower() == "y":
             write_if_complete(email=self.username, password=self.password, domain="tutanota")
         self.driver.quit()

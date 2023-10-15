@@ -1,11 +1,9 @@
 import random
 import hashlib
 from faker import Faker
-import re
 import os
-import random
 
-user_path = None  # Give it a safe place to store and update your accounts.txt file
+USER_PATH = os.getcwd()  # Give it a safe place to store and update your accounts.txt file
 
 
 def credential_creator(fullname=False):
@@ -21,9 +19,9 @@ def credential_creator(fullname=False):
     email = fullname.replace(" ", "") + str(integer_ran)
 
     password = (
-        hashlib.sha224(
-            b"Nobody inspects the spammish repetition" + bytes(integer_ran)
-        ).hexdigest()[:12]
+        hashlib.sha256(b"Nobody inspects the spammish repetition" + bytes(integer_ran)).hexdigest()[
+            :12
+        ]
         + "!"
     )
 
@@ -43,7 +41,9 @@ def birthday_creator():
     return day, month, year
 
 
-def write_if_complete(email: str, password: str, domain: str, country="com") -> None:
+def write_if_complete(
+    email: str, password: str, domain: str, country="com", user_path: str = USER_PATH
+) -> None:
     """
     Writes file to disk if the user deems the creation is complete.
 
@@ -55,7 +55,6 @@ def write_if_complete(email: str, password: str, domain: str, country="com") -> 
 
     :rtpye: [None]
     """
-    if user_path is None:
-        user_path = os.getcwd()
+    user_path = os.getcwd() if user_path is None else USER_PATH
     with open(f"{user_path}/accounts.txt", "a+") as f:
         f.write(f"{email}@{domain}.{country}:{password}\n")
