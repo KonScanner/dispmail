@@ -5,10 +5,10 @@ from utils.helper_functions import (
     credential_creator,
     birthday_creator,
     write_if_complete,
+    safe_split,
 )
 from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.support.ui import Select
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +30,7 @@ class Interia(Config):
         self.driver.maximize_window()
         self.e = None
         (fullname, email, pwd) = credential_creator(fullname=False)
-        self.first, self.last = fullname.split(" ")
+        self.first, self.last = safe_split(fullname)
         self.day, self.month, self.year = birthday_creator()
         self.username = email
         self.password = pwd

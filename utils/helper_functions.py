@@ -1,4 +1,5 @@
 import random
+import logging
 import hashlib
 from faker import Faker
 import os
@@ -57,4 +58,11 @@ def write_if_complete(
     """
     user_path = os.getcwd() if user_path is None else USER_PATH
     with open(f"{user_path}/accounts.txt", "a+") as f:
-        f.write(f"{email}@{domain}.{country}:{password}\n")
+        f.write(f"\n{email}@{domain}.{country}:{password}")
+
+
+def safe_split(fullname: str):
+    fname_ls = fullname.split(" ")
+    if len(fname_ls) != 2:
+        logging.info(f"Faker is fancy -- Fullname is:{fullname}")
+    return fname_ls[0], fname_ls[1]
