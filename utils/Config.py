@@ -1,3 +1,4 @@
+from xml.dom import ValidationErr
 from selenium import webdriver
 from time import sleep
 import logging
@@ -5,6 +6,12 @@ import logging
 
 class SleepConfig:
     sleep_amount = 0.1
+
+
+class FindTypes:
+    XPATH = "xpath"
+    CSS = "css"
+    CLASS_NAME = "class_name"
 
 
 class Config:
@@ -33,6 +40,28 @@ class Config:
         self.sleep_amount = 0.1
 
     @staticmethod
+    def sleeper(func):
+        def inner(*args, **kwargs):
+            result = func(*args, **kwargs)
+            sleep(SleepConfig.sleep_amount)
+            return result
+
+        return inner
+
+    @staticmethod
+    def force_find(
+        driver, element_str: str, search_type: str, sleep_amount=None, max_attempts: int = 10
+    ):
+        attempts = 0
+        while attempts < max_attempts:
+            try:
+                return find_type(driver=driver, element_str=element_str, search_type=search_type)
+            except Exception as e:
+                logging.debug(f"Forcing to find failed with exception {e}")
+                sleep_amount = sleep_amount if sleep_amount else SleepConfig.sleep_amount
+                sleep(sleep_amount)
+
+    @staticmethod
     def force_click(element, sleep_amount=None):
         """
         Clicks something until it works
@@ -45,7 +74,7 @@ class Config:
                 element.click()
                 return
             except Exception as e:
-                logging.debug(f"Forcing click with exception {e}")
+                logging.debug(f"Forcing to click failed with exception {e}")
                 sleep_amount = sleep_amount if sleep_amount else SleepConfig.sleep_amount
                 sleep(sleep_amount)
 
@@ -58,3 +87,14 @@ class Config:
         """
         if element:
             logging.info(element.get_attribute("outerHTML"))
+
+
+def find_type(driver, element_str: str, search_type: str):
+    if search_type.lower() == FindTypes.XPATH:
+        return driver.find_element_by_xpath(element_str)
+    elif search_type.lower() == FindTypes.CSS:
+        return driver.find_element_by_css_selector(element_str)
+    elif search_type.lower() == FindTypes.CLASS_NAME:
+        return driver.find_element_by_class_name(element_str)
+    else:
+        raise ValueError(f"Search type is not supported {search_type=}")

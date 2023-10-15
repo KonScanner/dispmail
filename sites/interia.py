@@ -7,7 +7,6 @@ from utils.helper_functions import (
     write_if_complete,
     safe_split,
 )
-from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 import logging
 
@@ -28,57 +27,46 @@ class Interia(Config):
         )
         self.failed_inputs = 0
         self.driver.maximize_window()
-        self.e = None
         (fullname, email, pwd) = credential_creator(fullname=False)
         self.first, self.last = safe_split(fullname)
         self.day, self.month, self.year = birthday_creator()
         self.username = email
         self.password = pwd
-        self.actions = ActionChains(self.driver)
 
-    @staticmethod
-    def sleeper(func):
-        def inner(*args, **kwargs):
-            result = func(*args, **kwargs)
-            t.sleep(SleepConfig.sleep_amount)
-            return result
-
-        return inner
-
-    @sleeper
+    @Config.sleeper
     def __deal_with_cookies(self):
         cookies = self.driver.find_element_by_xpath("/html/body/div[3]/div[2]/button[3]")
         self.force_click(cookies)
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_name(self):
         name = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[1]/input"
         )
         name.send_keys(self.first)
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_surname(self):
         surname = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[2]/input"
         )
         surname.send_keys(self.last)
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_username(self):
         username = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[5]/div[1]/input"
         )
         username.send_keys(self.username)
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_day(self):
         day = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[1]/input"
         )
         day.send_keys(self.day)
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_month(self):
         dropdown = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[2]"
@@ -88,21 +76,21 @@ class Interia(Config):
         first_item = options.find_element_by_class_name("account-select__options__item")
         self.force_click(first_item)
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_year(self):
         year = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[3]/div[3]/input"
         )
         year.send_keys(self.year)
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_pass1(self):
         pass_1 = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[6]/div/input"
         )
         pass_1.send_keys(self.password)
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_pass2(self):
         pass_2 = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[7]/div/input"
@@ -113,7 +101,7 @@ class Interia(Config):
         self.__deal_with_pass1()
         self.__deal_with_pass2()
 
-    @sleeper
+    @Config.sleeper
     def __deal_with_gender(self):
         dropdown = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[1]/div[4]/div[1]"
@@ -123,14 +111,14 @@ class Interia(Config):
         first_item = options.find_element_by_class_name("account-select__options__item")
         self.force_click(first_item)
 
-    @sleeper
+    @Config.sleeper
     def __remove_gambling_ads(self):
         gambling_ads = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[2]/div[1]/div[2]/div[4]/label"
         )
         self.force_click(gambling_ads)
 
-    @sleeper
+    @Config.sleeper
     def __accept_bad_conditions(self):
         conditions = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[2]/div[1]/div[1]/label/div/div"
@@ -138,7 +126,7 @@ class Interia(Config):
         self.force_click(conditions)
         self.__remove_gambling_ads()
 
-    @sleeper
+    @Config.sleeper
     def __finalize_account_creation(self):
         create_account = self.driver.find_element_by_xpath(
             "/html/body/div[1]/div/div/div/div/div[2]/div/form/div[2]/button"
@@ -146,7 +134,7 @@ class Interia(Config):
         self.force_click(create_account)
         t.sleep(2)
 
-    @sleeper
+    @Config.sleeper
     def __account_created(self):
         logging.warning("Has the account been created?")
         s = input("[y/N]: ").lower()
@@ -172,7 +160,7 @@ class Interia(Config):
         Creates the email.
         """
         self.driver.get("https://konto-pocztowe.interia.pl/#/nowe-konto/darmowe")
-        t.sleep(0.55)
+        t.sleep(1)
         self.__deal_with_cookies()
         self.__deal_with_name()
         self.__deal_with_surname()
