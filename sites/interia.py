@@ -142,8 +142,8 @@ class Interia(Config):
             write_if_complete(
                 email=self.username,
                 password=self.password,
-                domain="interia",
-                country="pl",
+                domain="tutanota",
+                country="com",
             )
         elif s == "n":
             self.failed_inputs += 1

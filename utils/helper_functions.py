@@ -57,7 +57,7 @@ def write_if_complete(
     :rtpye: [None]
     """
     user_path = os.getcwd() if user_path is None else USER_PATH
-    with open(f"{user_path}/accounts.txt", "a+") as f:
+    with open(f"{user_path}/accounts_personal.txt", "a+") as f:
         f.write(f"\n{email}@{domain}.{country}:{password}")
 
 
