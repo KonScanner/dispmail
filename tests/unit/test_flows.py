@@ -282,3 +282,14 @@ def test_dry_run_leaves_no_pending_credentials(tmp_path) -> None:
     settings = make_settings(tmp_path)
     _runner(settings, FakeBrowser()).run(tuta.build())
     assert list((tmp_path / "data").glob("pending_*.txt")) == []
+
+
+def test_provider_failure_text_is_classified_quickly(tmp_path) -> None:
+    settings = make_settings(tmp_path, submit=True, accept_attestation=True, submit_timeout=30)
+    browser = FakeBrowser()
+    browser.content_value = "Could not reach server, looks like you are offline."
+    result = _runner(settings, browser).run(tuta.build())
+    assert result.exit_code is ExitCode.REJECTED
+    assert result.outcome == "provider-error"
+    assert "Could not reach server" in result.detail
+    assert list((tmp_path / "data").glob("pending_*.txt"))
