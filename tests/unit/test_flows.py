@@ -1,5 +1,6 @@
 """Flow engine: dry-run gate, success detection, taxonomy and budget rules."""
 
+import stat
 from random import Random
 
 import pytest
@@ -255,3 +256,29 @@ def test_timeout_artifact_directory_exists(tmp_path) -> None:
     assert (result.artifacts / "fill-account-timeout.png").exists() or (
         result.artifacts / "select-free-plan-timeout.png"
     ).exists()
+
+
+def test_pending_credentials_survive_a_failed_detection(tmp_path) -> None:
+    settings = make_settings(tmp_path, submit=True, accept_attestation=True, submit_timeout=0.1)
+    result = _runner(settings, FakeBrowser()).run(tuta.build())
+    assert result.exit_code is ExitCode.REJECTED
+    pending = list((tmp_path / "data").glob("pending_*.txt"))
+    assert len(pending) == 1
+    assert ":" in pending[0].read_text(encoding="utf-8")
+    assert stat.S_IMODE(pending[0].stat().st_mode) == 0o600
+    assert AccountRepository(settings.data_dir).count() == 0
+
+
+def test_pending_credentials_are_removed_after_success(tmp_path) -> None:
+    settings = make_settings(tmp_path, submit=True, accept_attestation=True)
+    browser = FakeBrowser()
+    browser.url_after_click[tuta.CREATE.selector] = "https://app.tuta.com/mail"
+    result = _runner(settings, browser).run(tuta.build())
+    assert result.exit_code is ExitCode.OK
+    assert list((tmp_path / "data").glob("pending_*.txt")) == []
+
+
+def test_dry_run_leaves_no_pending_credentials(tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    _runner(settings, FakeBrowser()).run(tuta.build())
+    assert list((tmp_path / "data").glob("pending_*.txt")) == []

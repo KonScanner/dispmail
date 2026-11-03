@@ -226,6 +226,12 @@ class FlowRunner:
                 egress=facts,
             )
 
+        account_email = f"{creds.username}@{spec.email_domain}"
+        pending: Path | None = None
+        if self.settings.submit:
+            pending = self.store.stash_pending(Account(account_email, creds.password), spec.name)
+            logger.info("credentials held at %s until submit is confirmed", pending)
+
         self.browser.goto(spec.url)
         for step in spec.steps:
             challenge = detect(self.browser, spec.challenges + GENERIC_CHALLENGES)
@@ -255,6 +261,7 @@ class FlowRunner:
             blocked = self._challenge_result(spec, artifacts, challenge)
             return self._finish_failure(spec, artifacts, started, blocked, facts)
         if not success:
+            artifacts.capture(self.browser, "rejected")
             return self._record(
                 spec,
                 artifacts,
@@ -279,7 +286,7 @@ class FlowRunner:
 
         recovery = self._extract_recovery(spec)
         account = Account(
-            email=f"{creds.username}@{spec.email_domain}",
+            email=account_email,
             password=creds.password,
             recovery=recovery,
         )
@@ -327,6 +334,8 @@ class FlowRunner:
             )
         except OSError:
             logger.exception("the account was stored but the ledger write failed")
+        if pending is not None:
+            self.store.clear_pending(account.email, spec.name)
         logger.info("created %s", account.email)
         return FlowResult(
             provider=spec.name,

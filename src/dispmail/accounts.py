@@ -220,6 +220,23 @@ class AccountRepository:
             rows = connection.execute(query, parameters).fetchall()
         return [_to_stored(row) for row in rows]
 
+    def pending_path(self, email: str, platform: str) -> Path:
+        """Where an account's credentials wait while the submit result is unknown."""
+        return self.data_dir / f"pending_{email_slug(email)}_{email_slug(platform)}.txt"
+
+    def stash_pending(self, account: Account, platform: str) -> Path:
+        """Write the credentials before submit so a failed detection loses nothing."""
+        path = self.pending_path(account.email, platform)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.data_dir.chmod(0o700)
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(f"{account.email}:{account.password}\n")
+        return path
+
+    def clear_pending(self, email: str, platform: str) -> None:
+        self.pending_path(email, platform).unlink(missing_ok=True)
+
     def count(self) -> int:
         with self._connect() as connection:
             row = connection.execute("SELECT COUNT(*) AS total FROM accounts").fetchone()
