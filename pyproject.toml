@@ -1,0 +1,133 @@
+[project]
+name = "dispmail"
+version = "0.4.0"
+description = "Create disposable email accounts without giving away personal data"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [{ name = "KonScanner" }]
+requires-python = ">=3.14.8"
+keywords = ["selenium", "disposable-email", "automation", "privacy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+]
+dependencies = [
+    "faker>=40.44.0",
+    "patchright>=1.64.4",
+    "python-dotenv>=1.2.4",
+]
+
+[project.scripts]
+dispmail = "dispmail.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9.9,<0.14"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [{ include-group = "lint" }, { include-group = "test" }]
+lint = [
+    "ruff>=0.17.3",
+    "ty>=0.0.96",
+]
+test = [
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.uv]
+# The project is not published; keep the resolved set reproducible anyway.
+package = true
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--disable-warnings",
+    "--cov=dispmail",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+]
+markers = [
+    "browser: needs a real Chrome/chromedriver (Selenium Manager)",
+    "live: creates real accounts on live provider websites",
+]
+log_cli_level = "INFO"
+
+[tool.coverage.run]
+branch = true
+source = ["dispmail"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+exclude = ["docs"]
+src = ["src", "tests"]
+show-fixes = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN401",  # Any is fine at the Selenium boundary
+    "COM812",  # conflicts with the formatter
+    "CPY001",  # no per-file copyright headers
+    "FBT003",  # dataclass-style positional booleans in checks
+    "D",       # docstring style is not enforced; docstrings are written where useful
+    "EM101",   # exception message constants add noise
+    "EM102",   # f-string exception messages are fine
+    "FBT001",  # positional booleans kept for small helpers
+    "FBT002",
+    "ISC001",  # conflicts with the formatter
+    "PLR0911", # small runner helpers return early for clarity
+    "PLR0913", # constructors and record helpers take many fields
+    "PLR0917", # same, for positional arguments
+    "PLR2004", # magic values are validated by tests
+    "S311",    # randomness is for reproducible identities, not cryptography
+    "TC001",   # imports are runtime-resolved and cheap at this size
+    "TC003",
+    "TRY003",  # long exception messages are clearer inline
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "ANN",     # test annotations are noise
+    "ARG",     # fakes accept the same signature as the real ports
+    "D",       # test docstrings are prose
+    "FBT",     # fixtures pass booleans positionally
+    "S105",    # test passwords are fixtures, not secrets
+    "S106",
+    "PLR2004", # literal expectations are the point
+    "S101",    # asserts are the test mechanism
+    "SLF001",  # tests inspect private helpers on purpose
+]
+"docs/**" = ["INP001", "A"]
+"src/dispmail/cli.py" = ["T201"] # stdout is the CLI's interface
+
+[tool.ruff.lint.isort]
+known-first-party = ["dispmail"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[tool.ty.src]
+exclude = ["docs"]
