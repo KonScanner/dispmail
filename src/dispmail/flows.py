@@ -70,6 +70,7 @@ class ProviderSpec:
     domains: tuple[str, ...] = ()
     recovery: Callable[[Browser], str | None] | None = None
     recovery_extension: str = "txt"
+    failure_text: str | None = None
 
     def submit_step(self) -> Step:
         for step in self.steps:
@@ -256,7 +257,18 @@ class FlowRunner:
         wait_budget = (
             self.settings.assist_timeout if self.settings.assisted else self.settings.submit_timeout
         )
-        success, challenge = self._wait_for_success(spec, wait_budget)
+        success, challenge, failure = self._wait_for_success(spec, wait_budget)
+        if failure is not None:
+            artifacts.capture(self.browser, "provider-error")
+            return self._record(
+                spec,
+                artifacts,
+                started,
+                ExitCode.REJECTED,
+                "provider-error",
+                failure,
+                egress=facts,
+            )
         if challenge is not None:
             blocked = self._challenge_result(spec, artifacts, challenge)
             return self._finish_failure(spec, artifacts, started, blocked, facts)
@@ -473,23 +485,25 @@ class FlowRunner:
         self,
         spec: ProviderSpec,
         timeout: float,
-    ) -> tuple[bool, ChallengeSignature | None]:
+    ) -> tuple[bool, ChallengeSignature | None, str | None]:
         deadline = time.monotonic() + timeout
         assisted = self.settings.assisted and not self.settings.headless
         while time.monotonic() < deadline:
             try:
                 if spec.success(self.browser):
-                    return True, None
+                    return True, None, None
             except Exception:  # the page may be mid-navigation
                 logger.debug("success check raised; retrying", exc_info=True)
+            if spec.failure_text and spec.failure_text.lower() in self.browser.content().lower():
+                return False, None, f"provider reported: {spec.failure_text}"
             challenge = detect(self.browser, spec.challenges + GENERIC_CHALLENGES)
             if challenge is not None:
                 if not assisted:
-                    return False, challenge
+                    return False, challenge, None
                 if not self._wait_for_challenge_clear(spec):
-                    return False, challenge
+                    return False, challenge, None
             time.sleep(1)
-        return False, None
+        return False, None, None
 
     def _wait_for_challenge_clear(self, spec: ProviderSpec) -> bool:
         deadline = time.monotonic() + self.settings.assist_timeout

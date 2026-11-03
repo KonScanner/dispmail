@@ -125,6 +125,7 @@ def build(domain: str = "tutamail.com") -> ProviderSpec:
         plans=("free",),
         domains=DOMAINS,
         recovery=_recovery,
+        failure_text="Could not reach server",
     )
 
 
