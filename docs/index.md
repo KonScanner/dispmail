@@ -1,7 +1,7 @@
 ---
 layout: default
-title: Home
-nav_order: 1
+title: DispMail
+nav_exclude: true
 description: "Create one disposable mailbox without giving the provider your personal data."
 ---
 
