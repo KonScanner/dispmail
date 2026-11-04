@@ -148,6 +148,7 @@ class Settings:
     navigation_timeout: float = 30.0
     submit_timeout: float = 60.0
     assist_timeout: float = 600.0
+    recovery_timeout: float = 20.0
     manual: bool = False
     submit: bool = False
     assisted: bool = False
@@ -178,6 +179,7 @@ class Settings:
             navigation_timeout=env_float("DISPMAIL_NAVIGATION_TIMEOUT", 30.0),
             submit_timeout=env_float("DISPMAIL_SUBMIT_TIMEOUT", 60.0),
             assist_timeout=env_float("DISPMAIL_ASSIST_TIMEOUT", 600.0),
+            recovery_timeout=env_float("DISPMAIL_RECOVERY_TIMEOUT", 20.0),
             manual=env_bool("DISPMAIL_MANUAL", default=False),
             submit=env_bool("DISPMAIL_SUBMIT", default=False),
             assisted=env_bool("DISPMAIL_ASSISTED", default=False),

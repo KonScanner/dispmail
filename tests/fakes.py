@@ -128,6 +128,7 @@ def make_settings(tmp_path: Path, **overrides: object) -> Settings:
     base = Settings(
         state_dir=tmp_path / "state",
         data_dir=tmp_path / "data",
+        recovery_timeout=0.2,
         artifacts_dir=tmp_path / "artifacts",
         egress=EgressSpec(name="test", expect_country="GR"),
     )

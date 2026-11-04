@@ -364,11 +364,18 @@ class FlowRunner:
         """Recovery extraction is best effort: it must never lose the account row."""
         if spec.recovery is None:
             return None
-        try:
-            return spec.recovery(self.browser)
-        except Exception:  # noqa: BLE001 - the account is already created
-            logger.warning("could not extract the recovery kit; capture it manually")
-            return None
+        deadline = time.monotonic() + self.settings.recovery_timeout
+        while True:
+            try:
+                value = spec.recovery(self.browser)
+            except Exception:  # noqa: BLE001 - the account is already created
+                value = None
+            if value:
+                return value
+            if time.monotonic() >= deadline:
+                logger.warning("could not extract the recovery kit; capture it manually")
+                return None
+            time.sleep(1)
 
     def _execute_step(
         self,

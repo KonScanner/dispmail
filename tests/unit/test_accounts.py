@@ -87,3 +87,14 @@ def test_recovery_extension_is_sanitised(repository) -> None:
         recovery_extension="../pdf",
     )
     assert stored.recovery_file == "recovery_user@tuta.com_tuta.pdf"
+
+
+def test_set_recovery_backfills_row_and_file(repository) -> None:
+    repository.add(Account("user@tutamail.com", "secret"), platform="tuta")
+    updated = repository.set_recovery("user@tutamail.com", "fa54 7805 6b94 bfca")
+    assert updated.recovery == "fa54 7805 6b94 bfca"
+    path = updated.recovery_path(repository.data_dir)
+    assert path is not None
+    assert path.read_text(encoding="utf-8").strip() == "fa54 7805 6b94 bfca"
+    with pytest.raises(AccountExistsError):
+        repository.set_recovery("missing@tutamail.com", "x")
