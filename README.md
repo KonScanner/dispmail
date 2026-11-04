@@ -4,9 +4,11 @@ Create one disposable mailbox without giving personal data to the provider. Disp
 drives the system Chrome through a provider signup flow, stops before the submit
 button by default, and stores the result locally.
 
-The project was rebuilt against the live sites on 2026-11-03. The recon evidence,
-selectors and blockers are in [`docs/recon/`](docs/recon/summary.md). The design and
-test plans are in [`docs/`](docs/index.md).
+Documentation: <https://konscanner.github.io/dispmail/>
+
+The site covers install, usage, providers, egress, account data and the exit codes. The
+design record lives in [`docs/`](docs/index.md), with the recon evidence in
+[`docs/recon/`](docs/recon/summary.md).
 
 ## Status
 
@@ -126,7 +128,8 @@ Layout: `src/dispmail/` (engine, browser port, providers), `tests/unit/`,
 
 There is no CI. Rings 2 and 3 need a specific egress and, for Interia, a human.
 
-## Legacy
+## Site
 
-`index.html`, `js/` and `css/` are an old static viewer. They read `accounts.txt`,
-which the SQLite store no longer writes. They are not part of the CLI.
+The documentation site is built by GitHub Pages from `docs/` with Jekyll and the
+`just-the-docs` theme. It has no analytics, no cookies and no third-party requests.
+Run `make check` before you push; the site needs no local toolchain.

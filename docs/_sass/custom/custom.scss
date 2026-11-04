@@ -1,0 +1,103 @@
+// DispMail: sober documentation styling. One accent, system fonts, hairline structure.
+
+:root {
+  --rule: #{$rule-color};
+  --accent: #{$accent-color};
+}
+
+// Type: one family, heavier headings, no all-caps labels.
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  letter-spacing: -0.02em;
+}
+
+h4,
+.text-delta {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+// Links are links: underline on hover, visible focus everywhere.
+a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+// Code and tables sit inside a hairline, not a shadow.
+div.highlight {
+  border: 1px solid var(--rule);
+}
+
+th,
+td {
+  text-align: left;
+}
+
+th {
+  font-weight: 600;
+}
+
+// Inline code stays on one line; blocks still scroll.
+.main-content :not(pre) > code {
+  white-space: nowrap;
+}
+
+// The home page ledger: two facts side by side, divided by one rule.
+.ledger {
+  display: grid;
+  gap: 2rem;
+  margin: 2.5rem 0 3rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--rule);
+}
+
+.ledger h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+  letter-spacing: 0;
+}
+
+.ledger ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.ledger li {
+  margin: 0.5rem 0;
+}
+
+@media (min-width: 50em) {
+  .ledger {
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .ledger section:first-child {
+    padding-right: 2.5rem;
+  }
+
+  .ledger section:last-child {
+    padding-left: 2.5rem;
+    border-left: 1px solid var(--rule);
+  }
+}

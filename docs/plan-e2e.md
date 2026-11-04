@@ -1,8 +1,14 @@
+---
+layout: default
+title: End-to-end plan
+parent: Design
+nav_order: 1
+description: "Test rings, seams, acceptance criteria."
+---
+
 # Plan: end-to-end testing
 
-Status: **proposed, pending go-ahead.** Companion to
-`docs/plan-egress-fingerprint.md` (design decisions) and
-`docs/plan-provider-rework.md` (per-provider work).
+Status: **partly adopted.** Ring 1, the offline tests, is in `tests/`. Rings 2 and 3 need a controlled egress and, for Interia, a human at the CAPTCHA.
 
 ## 1. What "working end to end" will mean
 

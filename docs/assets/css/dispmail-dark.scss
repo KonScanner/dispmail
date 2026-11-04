@@ -1,0 +1,29 @@
+---
+---
+// Dark palette. The theme's dark scheme supplies every variable the modules expect;
+// DispMail's own ink, rule and pine values then replace the parts we care about.
+// The page loads this file with media="(prefers-color-scheme: dark)".
+
+@import "./support/support";
+@import "./custom/setup";
+@import "./color_schemes/dark";
+
+$color-scheme: dark;
+$accent-color: #8fc3ac;
+$rule-color: #2b3330;
+
+$body-background-color: #131719;
+$body-heading-color: #eef1ec;
+$body-text-color: #cfd6cf;
+$link-color: $accent-color;
+$nav-child-link-color: #b9c2ba;
+$sidebar-color: #171c1d;
+$border-color: $rule-color;
+$code-background-color: #191f20;
+$table-background-color: #171c1d;
+$search-background-color: #191f20;
+$search-result-preview-color: #9aa49d;
+$feedback-color: #131719;
+
+@import "./modules";
+@import "./custom/custom";
