@@ -13,11 +13,11 @@ The plans below describe how the tool is built and why. They were written before
 and are kept as the design record. Each one records decisions, the evidence that produced
 them, and what remains open.
 
-- [End-to-end plan]({% link plan-e2e.md %}): the test rings, the seams, the acceptance
+- [End-to-end plan]({{ site.baseurl }}{% link plan-e2e.md %}): the test rings, the seams, the acceptance
   criteria, and what cannot be tested offline.
-- [Egress and fingerprint]({% link plan-egress-fingerprint.md %}): the egress check, the
+- [Egress and fingerprint]({{ site.baseurl }}{% link plan-egress-fingerprint.md %}): the egress check, the
   browser persona, the budgets and the challenge policy.
-- [Provider rework]({% link plan-provider-rework.md %}): every step of both sign-up paths,
+- [Provider rework]({{ site.baseurl }}{% link plan-provider-rework.md %}): every step of both sign-up paths,
   the selectors, the blockers and the order of work.
 
 The recon evidence behind those decisions, with DOM snapshots and screenshots, is in the

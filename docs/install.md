@@ -60,4 +60,4 @@ A failed check names the fix. `doctor` exits with code 1 when any check fails.
 
 `data/` is created with mode 0700. Its files are 0600.
 
-Next: [Usage]({% link usage.md %}).
+Next: [Usage]({{ site.baseurl }}{% link usage.md %}).

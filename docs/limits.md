@@ -62,4 +62,4 @@ run is replaced with `***`.
 | 8 | The account already exists in the database |
 | 9 | Blocked: the provider refused the address for a week |
 
-Next: [Development]({% link development.md %}).
+Next: [Development]({{ site.baseurl }}{% link development.md %}).

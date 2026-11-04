@@ -1,6 +1,6 @@
 # DispMail documentation site — design
 
-2026-11-04. Status: awaiting approval.
+2026-11-04. Status: built and deployed.
 
 ## Intent
 
@@ -111,6 +111,9 @@ Safety 7, Development 8, Design 9.
 4. `make check` still passes.
 5. After deploy: fetch the site root and each page, check navigation, search, and that
    `recon/` and `superpowers/` return 404.
+
+Result: all pages return 200, the excluded directories return 404, the internal links
+resolve through `/dispmail`, and the built pages make no external request.
 
 ## Out of scope
 

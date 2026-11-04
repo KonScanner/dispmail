@@ -76,4 +76,4 @@ Every target passes `ARGS` through, for example `make read-tuta ARGS='--limit 5'
 A copy of `data/` is a copy of every password. Keep it on encrypted storage, or do not keep
 it at all.
 
-Next: [Limits and exit codes]({% link limits.md %}).
+Next: [Limits and exit codes]({{ site.baseurl }}{% link limits.md %}).

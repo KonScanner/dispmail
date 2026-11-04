@@ -66,4 +66,4 @@ case.
 | `--proxy-username` | `DISPMAIL_PROXY_USERNAME` | Proxy user |
 | `--proxy-password` | `DISPMAIL_PROXY_PASSWORD` | Proxy password |
 
-Next: [Account data]({% link data.md %}).
+Next: [Account data]({{ site.baseurl }}{% link data.md %}).
