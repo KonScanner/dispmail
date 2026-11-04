@@ -87,7 +87,7 @@ def _add_run_arguments(parser: argparse.ArgumentParser, name: str) -> None:
         "--replace-account",
         action="store_true",
         default=None,
-        help="allow a new account even though one is already recorded",
+        help="ignore the weekly limit (use when an old account is gone)",
     )
     parser.add_argument(
         "--show-passwords",
@@ -98,6 +98,7 @@ def _add_run_arguments(parser: argparse.ArgumentParser, name: str) -> None:
     parser.add_argument("--seed", type=int)
     parser.add_argument("--timeout", type=float)
     parser.add_argument("--assist-timeout", type=float)
+    parser.add_argument("--weekly-limit", type=_positive_int)
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--artifacts-dir", type=Path)
     parser.add_argument("--state-dir", type=Path)
@@ -165,6 +166,7 @@ def _settings_from_args(args: argparse.Namespace) -> Settings:
     argument_to_field = {
         "timeout": "timeout",
         "assist_timeout": "assist_timeout",
+        "weekly_limit": "weekly_limit",
         "data_dir": "data_dir",
         "artifacts_dir": "artifacts_dir",
         "state_dir": "state_dir",

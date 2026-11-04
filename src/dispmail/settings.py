@@ -2,6 +2,7 @@
 
 import os
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from enum import IntEnum
 from pathlib import Path
 from random import Random
@@ -38,6 +39,21 @@ def env_bool(name: str, default: bool) -> bool:
         return False
     msg = f"{name} must be a boolean, got {raw!r}"
     raise ValueError(msg)
+
+
+def env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        msg = f"{name} must be an integer, got {raw!r}"
+        raise ValueError(msg) from exc
+    if value < 1:
+        msg = f"{name} must be at least 1, got {value}"
+        raise ValueError(msg)
+    return value
 
 
 def env_float(name: str, default: float) -> float:
@@ -149,6 +165,7 @@ class Settings:
     submit_timeout: float = 60.0
     assist_timeout: float = 600.0
     recovery_timeout: float = 20.0
+    weekly_limit: int = 4
     manual: bool = False
     submit: bool = False
     assisted: bool = False
@@ -169,6 +186,10 @@ class Settings:
     def db_path(self) -> Path:
         return self.data_dir / "sqlite.db"
 
+    @property
+    def week_cutoff(self) -> str:
+        return (datetime.now(UTC) - timedelta(days=7)).isoformat(timespec="seconds")
+
     @classmethod
     def from_env(cls) -> Settings:
         load_dotenv(override=False)
@@ -180,6 +201,7 @@ class Settings:
             submit_timeout=env_float("DISPMAIL_SUBMIT_TIMEOUT", 60.0),
             assist_timeout=env_float("DISPMAIL_ASSIST_TIMEOUT", 600.0),
             recovery_timeout=env_float("DISPMAIL_RECOVERY_TIMEOUT", 20.0),
+            weekly_limit=env_int("DISPMAIL_WEEKLY_LIMIT", 4),
             manual=env_bool("DISPMAIL_MANUAL", default=False),
             submit=env_bool("DISPMAIL_SUBMIT", default=False),
             assisted=env_bool("DISPMAIL_ASSISTED", default=False),

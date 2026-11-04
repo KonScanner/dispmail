@@ -15,8 +15,10 @@ test plans are in [`docs/`](docs/index.md).
 | Tuta | Free | Dry run verified against the live site. A live run needs a clean egress. |
 | Interia | Darmowe | Fill flow verified to the submit gate. This IP was challenged after repeated attempts. Live is assisted: it ends in an image CAPTCHA and SMS/mail verification. |
 
-Both providers permit one free account per person. The ledger and the database enforce
-one created account per provider.
+Tuta asks you to affirm that you own no other free Tuta account, and Interia has a
+similar term. The tool cannot verify this. It enforces a configurable limit of **4
+accounts per provider in a rolling 7 days** (`--weekly-limit`, `DISPMAIL_WEEKLY_LIMIT`).
+You are responsible for the provider terms.
 
 ## Requirements
 
@@ -103,8 +105,8 @@ cooldown or lock, 6 provider changed, 7 rejected, 8 account already recorded.
 
 ## Safety rules
 
-- One account per provider per person. The database and the ledger both enforce it;
-  `--replace-account` is the only override.
+- Up to 4 accounts per provider in a rolling 7 days. The database and the ledger both
+  count; `--replace-account` bypasses the limit for a lost account.
 - One run at a time. A challenge sets a 24 hour cooldown, then 7 days.
 - CAPTCHAs are never solved automatically. A headed assisted run waits for a human; a
   headless run stops with exit code 4.

@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 CHALLENGE_COOLDOWN = timedelta(hours=24)
 SECOND_CHALLENGE_COOLDOWN = timedelta(days=7)
 CHALLENGE_WINDOW = timedelta(days=30)
+WEEKLY_WINDOW = timedelta(days=7)
 
 
 class BudgetError(Exception):
@@ -92,11 +93,13 @@ class Ledger:
             handle.write(json.dumps(asdict(attempt), ensure_ascii=False) + "\n")
         self.path.chmod(0o600)
 
-    def created_for(self, provider: str) -> list[Attempt]:
+    def created_for(self, provider: str, *, since: datetime | None = None) -> list[Attempt]:
         return [
             attempt
             for attempt in self.read()
-            if attempt.provider == provider and attempt.outcome in {"created", "created-unstored"}
+            if attempt.provider == provider
+            and attempt.outcome in {"created", "created-unstored"}
+            and (since is None or attempt.when >= since)
         ]
 
     def challenges_for(self, provider: str, egress: str) -> list[Attempt]:
@@ -123,13 +126,14 @@ class Ledger:
         egress: str,
         *,
         allow_replacement: bool = False,
+        weekly_limit: int = 4,
     ) -> None:
         """Raise :class:`BudgetError` when this run must not start."""
-        if self.created_for(provider) and not allow_replacement:
+        recent = self.created_for(provider, since=datetime.now(UTC) - WEEKLY_WINDOW)
+        if len(recent) >= weekly_limit and not allow_replacement:
             msg = (
-                f"{provider} already has a created account in the ledger; "
-                "only one account per provider per person is allowed "
-                "(pass --replace-account if the old account is gone)"
+                f"{provider} reached {weekly_limit} accounts in the last 7 days "
+                "(pass --replace-account if an old account is gone)"
             )
             raise BudgetError(msg)
         until = self.cooldown_until(provider, egress)

@@ -21,7 +21,7 @@ before changing the design.
 | 10 | Test gating | Ring 1 (offline) in CI; ring 2 (live dry-run) opt-in by env; ring 3 (real signup) manual CLI only. |
 | 11 | Rebuild order | Revised by #15: **Tuta first**, then Interia. |
 | 12 | Promotion rule | 5 clean dry-runs at 0 challenges, then 1 live account. Any challenge stops that egress (7-day cooldown). |
-| 13 | Account volume vs terms | One account per provider **per person**. Tuta now requires an attestation that you own no other Free Tuta account; Interia's registration agreement is equivalent. No multi-account farming on one provider. |
+| 13 | Account volume vs terms | Revised on 2026-11-04 at the user's request: **up to 4 accounts per provider in a rolling 7 days** (`DISPMAIL_WEEKLY_LIMIT`). Tuta still asks you to affirm one free account per person; the tool cannot verify the attestation and logs a warning when an account is already recorded. |
 | 14 | Recon evidence | Tuta: no captcha, stable `data-testid`s, free plan is not the default. Interia: reCAPTCHA Enterprise (invisible, on submit) and randomised field names per load. |
 | 15 | Order after recon | Tuta first (clean testids, no captcha), then Interia (label selectors + captcha handoff). |
 
@@ -144,10 +144,10 @@ a workspace `.dispmail-state/` in tests; gitignored).
 - `ledger.jsonl`: one line per attempt
   `{ts, provider, egress, persona, account_hash, outcome, challenge, exit_code}`.
   No passwords; `account_hash` is a salted hash so the file is not a credential store.
-- Caps: **one created account per provider per person, lifetime** (the providers require
-  it). A second attempt for the same provider is refused unless `--replace-account` is
-  passed after the old account was lost. The ledger also enforces max 1 run at a time
-  (`flock` on `run.lock`) and 5 dry-runs per provider before the live run.
+- Caps: **4 created accounts per provider in a rolling 7 days** (the database and the
+  ledger both count). `--weekly-limit` changes the number; `--replace-account` bypasses
+  the limit for a lost account. The ledger also enforces max 1 run at a time (`flock`
+  on `run.lock`).
 - Cooldowns: a challenge sets a 24 h cooldown for `(provider, egress)`; a second
   challenge sets 7 days and requires `--review-cooldown`.
 - Human-ish input: per-character delay 40–120 ms, step dwell 0.8–2.5 s, one short

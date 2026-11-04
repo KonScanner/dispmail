@@ -38,9 +38,9 @@ A path = **provider × plan × domain × consent strategy**, executed in a **mod
 | `interia-free-all` | Interia | Free | `interia.pl` | accept-all | assisted only, opt-in flag |
 | `interia-paid` | Interia | Bez reklam / PocztaPRO | n/a | n/a | **never** (would start a paid subscription) |
 
-Only one account per provider per person is created (see the egress plan, decision
-#13). The domain variants exist because the domain is a parameter; they are not
-separate accounts.
+Up to four accounts per provider in a rolling 7 days are allowed (see the egress
+plan, decision #13). The domain variants exist because the domain is a parameter; they
+are not separate accounts. Tuta still asks you to affirm one free account per person.
 
 "Assisted" means the tool drives the flow until a human-only step (image CAPTCHA,
 SMS code) and resumes after the human completes it. Tuta is fully unattended;
