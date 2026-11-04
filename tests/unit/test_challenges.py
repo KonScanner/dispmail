@@ -45,3 +45,21 @@ def test_detection_never_raises() -> None:
             raise RuntimeError("navigation in progress")
 
     assert detect(Broken(), (ChallengeSignature("text", "verify"),)) is None
+
+
+def test_polish_recaptcha_text_is_detected() -> None:
+    browser = FakeBrowser()
+    browser.content_value = "Wybierz wszystkie obrazy, na których jest autobus"
+    assert detect(browser, INTERIA_CHALLENGES) is not None
+
+
+def test_recaptcha_image_grid_is_detected() -> None:
+    browser = FakeBrowser()
+    browser.present.add("#rc-imageselect")
+    assert detect(browser, INTERIA_CHALLENGES) is not None
+
+
+def test_recaptcha_bframe_is_detected() -> None:
+    browser = FakeBrowser()
+    browser.present.add("iframe[src*='recaptcha'][src*='bframe']")
+    assert detect(browser, INTERIA_CHALLENGES) is not None

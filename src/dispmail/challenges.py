@@ -31,13 +31,24 @@ GENERIC_CHALLENGES: tuple[ChallengeSignature, ...] = (
 INTERIA_CHALLENGES: tuple[ChallengeSignature, ...] = (
     ChallengeSignature("css", ".captcha__image", "Interia image captcha"),
     ChallengeSignature("css", ".captcha__input", "Interia captcha input"),
-    ChallengeSignature("text", "kod jest wymagany", "Interia captcha prompt"),
-    ChallengeSignature("text", "kod jest nieprawid", "Interia captcha rejection"),
+    ChallengeSignature("css", ".captcha__command", "Interia captcha instruction"),
+    ChallengeSignature("css", "#rc-imageselect", "reCAPTCHA image grid"),
+    ChallengeSignature("css", ".rc-imageselect-desc", "reCAPTCHA image instruction"),
     ChallengeSignature(
         "css",
         "iframe[title*='recaptcha challenge']",
         "reCAPTCHA challenge frame",
     ),
+    ChallengeSignature(
+        "css",
+        "iframe[src*='recaptcha'][src*='bframe']",
+        "reCAPTCHA challenge frame (bframe)",
+    ),
+    ChallengeSignature("text", "kod jest wymagany", "Interia captcha prompt"),
+    ChallengeSignature("text", "kod jest nieprawid", "Interia captcha rejection"),
+    ChallengeSignature("text", "wybierz wszystkie obrazy", "reCAPTCHA Polish instruction"),
+    ChallengeSignature("text", "select all images", "reCAPTCHA English instruction"),
+    ChallengeSignature("text", "kliknij weryfikuj", "reCAPTCHA verify button"),
 )
 
 TUTA_CHALLENGES: tuple[ChallengeSignature, ...] = ()

@@ -551,6 +551,10 @@ class FlowRunner:
         return False, None, None, None
 
     def _wait_for_challenge_clear(self, spec: ProviderSpec) -> bool:
+        logger.warning(
+            "solve the challenge in the browser window; the run waits up to %.0f seconds",
+            self.settings.assist_timeout,
+        )
         deadline = time.monotonic() + self.settings.assist_timeout
         while time.monotonic() < deadline:
             if detect(self.browser, spec.challenges + GENERIC_CHALLENGES) is None:

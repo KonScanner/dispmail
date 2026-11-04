@@ -90,3 +90,7 @@ def test_data_dir_defaults_to_cwd(monkeypatch) -> None:
     monkeypatch.delenv("DISPMAIL_DATA_DIR", raising=False)
     assert Settings.from_env().data_dir == Path.cwd() / "data"
     assert Settings.from_env().db_path == Path.cwd() / "data" / "sqlite.db"
+
+
+def test_assisted_window_defaults_to_thirty_minutes() -> None:
+    assert Settings().assist_timeout == 1800.0

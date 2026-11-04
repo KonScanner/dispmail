@@ -176,7 +176,7 @@ def build(consents: str = "required") -> ProviderSpec:
         challenges=INTERIA_CHALLENGES,
         password_rules=PasswordRules(min_length=12, max_length=64),
         faker_locale="pl_PL",
-        locale="pl-PL",
+        locale="en-US",
         needs_attestation=False,
         plans=("free",),
         domains=(EMAIL_DOMAIN,),
