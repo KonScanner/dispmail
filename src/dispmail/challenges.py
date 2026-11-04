@@ -18,6 +18,7 @@ class ChallengeSignature:
     kind: SignatureKind
     value: str
     description: str = ""
+    frame: str | None = None
 
 
 GENERIC_CHALLENGES: tuple[ChallengeSignature, ...] = (
@@ -32,23 +33,20 @@ INTERIA_CHALLENGES: tuple[ChallengeSignature, ...] = (
     ChallengeSignature("css", ".captcha__image", "Interia image captcha"),
     ChallengeSignature("css", ".captcha__input", "Interia captcha input"),
     ChallengeSignature("css", ".captcha__command", "Interia captcha instruction"),
-    ChallengeSignature("css", "#rc-imageselect", "reCAPTCHA image grid"),
-    ChallengeSignature("css", ".rc-imageselect-desc", "reCAPTCHA image instruction"),
     ChallengeSignature(
         "css",
-        "iframe[title*='recaptcha challenge']",
-        "reCAPTCHA challenge frame",
+        "#rc-imageselect",
+        "reCAPTCHA image grid",
+        frame="iframe[src*='recaptcha'][src*='bframe']",
     ),
     ChallengeSignature(
         "css",
-        "iframe[src*='recaptcha'][src*='bframe']",
-        "reCAPTCHA challenge frame (bframe)",
+        ".rc-imageselect-desc",
+        "reCAPTCHA image instruction",
+        frame="iframe[src*='recaptcha'][src*='bframe']",
     ),
     ChallengeSignature("text", "kod jest wymagany", "Interia captcha prompt"),
     ChallengeSignature("text", "kod jest nieprawid", "Interia captcha rejection"),
-    ChallengeSignature("text", "wybierz wszystkie obrazy", "reCAPTCHA Polish instruction"),
-    ChallengeSignature("text", "select all images", "reCAPTCHA English instruction"),
-    ChallengeSignature("text", "kliknij weryfikuj", "reCAPTCHA verify button"),
 )
 
 TUTA_CHALLENGES: tuple[ChallengeSignature, ...] = ()
@@ -62,17 +60,22 @@ def detect(
     for signature in signatures:
         try:
             if signature.kind == "url" and signature.value.lower() in browser.url().lower():
-                logger.warning("challenge detected: %s", signature.description)
+                logger.debug("challenge detected: %s", signature.description)
                 return signature
             if signature.kind == "title" and signature.value.lower() in browser.title().lower():
-                logger.warning("challenge detected: %s", signature.description)
+                logger.debug("challenge detected: %s", signature.description)
                 return signature
             if signature.kind == "text" and signature.value.lower() in browser.content().lower():
-                logger.warning("challenge detected: %s", signature.description)
+                logger.debug("challenge detected: %s", signature.description)
                 return signature
-            if signature.kind == "css" and browser.has(css(signature.value), timeout=0.2):
-                logger.warning("challenge detected: %s", signature.description)
-                return signature
+            if signature.kind == "css":
+                if signature.frame is not None:
+                    found = browser.has_in_frame(signature.frame, signature.value, timeout=0.3)
+                else:
+                    found = browser.has(css(signature.value), timeout=0.2)
+                if found:
+                    logger.debug("challenge detected: %s", signature.description)
+                    return signature
         except Exception:  # noqa: BLE001 - detection must never crash the flow
             logger.debug("challenge signature %s could not be evaluated", signature)
     return None

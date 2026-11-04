@@ -90,6 +90,10 @@ class Browser(Protocol):  # pragma: no cover - interface only
 
     def has(self, locator: Locator, *, timeout: float = 0.0) -> bool: ...
 
+    def has_in_frame(
+        self, frame_selector: str, inner_selector: str, *, timeout: float = 0.0
+    ) -> bool: ...
+
     def count(self, locator: Locator) -> int: ...
 
     def content(self) -> str: ...
@@ -184,6 +188,20 @@ class PatchrightBrowser:  # pragma: no cover - adapter, exercised by live runs
             except PatchrightTimeoutError:
                 return False
         return self._locator(locator).count() > 0
+
+    def has_in_frame(
+        self, frame_selector: str, inner_selector: str, *, timeout: float = 0.0
+    ) -> bool:  # pragma: no cover - adapter
+        frame = self._page.frame_locator(frame_selector)
+        locator = frame.locator(inner_selector)
+        if timeout <= 0:
+            return locator.count() > 0
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if locator.count() > 0:
+                return True
+            time.sleep(0.1)
+        return False
 
     def count(self, locator: Locator) -> int:
         return int(self._locator(locator).count())

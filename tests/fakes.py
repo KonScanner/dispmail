@@ -75,6 +75,12 @@ class FakeBrowser:
         self.actions.append(("has", locator.selector))
         return locator.selector in self.present and locator.selector not in self.missing
 
+    def has_in_frame(
+        self, frame_selector: str, inner_selector: str, *, timeout: float = 0.0
+    ) -> bool:
+        self.actions.append(("has_in_frame", f"{frame_selector}>>{inner_selector}"))
+        return f"{frame_selector}>>{inner_selector}" in self.present
+
     def count(self, locator: Locator) -> int:
         return 1 if locator.selector in self.present else 0
 

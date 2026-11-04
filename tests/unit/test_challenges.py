@@ -47,19 +47,13 @@ def test_detection_never_raises() -> None:
     assert detect(Broken(), (ChallengeSignature("text", "verify"),)) is None
 
 
-def test_polish_recaptcha_text_is_detected() -> None:
-    browser = FakeBrowser()
-    browser.content_value = "Wybierz wszystkie obrazy, na których jest autobus"
-    assert detect(browser, INTERIA_CHALLENGES) is not None
-
-
-def test_recaptcha_image_grid_is_detected() -> None:
-    browser = FakeBrowser()
-    browser.present.add("#rc-imageselect")
-    assert detect(browser, INTERIA_CHALLENGES) is not None
-
-
-def test_recaptcha_bframe_is_detected() -> None:
+def test_invisible_recaptcha_is_not_a_challenge() -> None:
     browser = FakeBrowser()
     browser.present.add("iframe[src*='recaptcha'][src*='bframe']")
+    assert detect(browser, INTERIA_CHALLENGES) is None
+
+
+def test_recaptcha_image_grid_inside_the_frame_is_detected() -> None:
+    browser = FakeBrowser()
+    browser.present.add("iframe[src*='recaptcha'][src*='bframe']>>#rc-imageselect")
     assert detect(browser, INTERIA_CHALLENGES) is not None
