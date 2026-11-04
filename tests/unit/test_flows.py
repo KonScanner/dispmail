@@ -101,8 +101,8 @@ def test_timeout_is_provider_changed(tmp_path) -> None:
     assert result.artifacts is not None
 
 
-def test_challenge_sets_cooldown_and_blocks_second_run(tmp_path) -> None:
-    settings = make_settings(tmp_path)
+def test_live_challenge_sets_cooldown_and_blocks_second_run(tmp_path) -> None:
+    settings = make_settings(tmp_path, submit=True)
     browser = FakeBrowser()
     browser.content_value = "Kod jest wymagany"
     spec = interia.build()
@@ -111,6 +111,32 @@ def test_challenge_sets_cooldown_and_blocks_second_run(tmp_path) -> None:
     second = _runner(settings, FakeBrowser()).run(spec)
     assert second.exit_code is ExitCode.BUDGET
     assert "cooling down" in second.detail
+
+
+def test_dry_run_challenge_does_not_set_a_cooldown(tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    browser = FakeBrowser()
+    browser.content_value = "Kod jest wymagany"
+    spec = interia.build()
+    first = _runner(settings, browser).run(spec)
+    assert first.exit_code is ExitCode.CHALLENGE
+    assert not any(entry.challenged for entry in Ledger(settings.state_dir).read())
+    again = FakeBrowser()
+    again.content_value = "Kod jest wymagany"
+    second = _runner(settings, again).run(spec)
+    assert second.exit_code is ExitCode.CHALLENGE
+
+
+def test_cooldown_can_be_ignored(tmp_path) -> None:
+    settings = make_settings(tmp_path, submit=True, ignore_cooldown=True)
+    browser = FakeBrowser()
+    browser.content_value = "Kod jest wymagany"
+    spec = interia.build()
+    assert _runner(settings, browser).run(spec).exit_code is ExitCode.CHALLENGE
+    again = FakeBrowser()
+    again.content_value = "Kod jest wymagany"
+    retry = _runner(settings, again).run(spec)
+    assert retry.exit_code is ExitCode.CHALLENGE
 
 
 def test_weekly_limit_is_enforced(tmp_path) -> None:
@@ -360,3 +386,25 @@ def test_taken_username_falls_back_to_an_alternative(tmp_path) -> None:
     chosen = tuta._choose_username(browser, credentials, 0.3)
     assert chosen.username == credentials.alternatives[0]
     assert chosen.alternatives == ()
+
+
+def test_interia_checks_every_required_consent(tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    browser = FakeBrowser()
+    _runner(settings, browser).run(interia.build(consents="required"))
+    clicked = " ".join(selector for action, selector in browser.actions if action == "click")
+    for name in interia.REQUIRED_CONSENTS:
+        assert name in clicked
+
+
+def test_interia_success_is_the_login_redirect(tmp_path) -> None:
+    settings = make_settings(tmp_path, submit=True)
+    browser = FakeBrowser()
+    browser.url_after_click[interia.SUBMIT.selector] = "https://poczta.interia.pl/logowanie/"
+    result = _runner(settings, browser).run(interia.build())
+    assert result.exit_code is ExitCode.OK
+    assert result.outcome == "created"
+    rows = AccountRepository(settings.data_dir).find()
+    assert len(rows) == 1
+    assert rows[0].platform == "interia"
+    assert list((settings.data_dir).glob("pending_*.txt")) == []

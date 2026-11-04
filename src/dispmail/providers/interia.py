@@ -7,6 +7,7 @@ honeypots) and submit continues into a captcha/verification flow that only a
 human can finish.
 """
 
+import logging
 import time
 from functools import partial
 from pathlib import Path
@@ -17,6 +18,8 @@ from dispmail.credentials import Credentials, PasswordRules
 from dispmail.flows import FlowAbortError, ProviderSpec, Step, StepKind
 from dispmail.providers.contracts import Contract
 from dispmail.settings import ExitCode
+
+logger = logging.getLogger(__name__)
 
 SIGNUP_URL = "https://konto-pocztowe.interia.pl/#/nowe-konto/darmowe"
 EMAIL_DOMAIN = "interia.pl"
@@ -59,6 +62,7 @@ PASSWORD = css("#password")
 PASSWORD_REPEAT = css("#rePassword")
 CONSENT_ALL_LABEL = xpath("//label[.//input[@name='agreementacceptAll-acceptAll']]")
 CONSENT_EXPAND = xpath("(//button[contains(@class,'expand-button')])[1]")
+REQUIRED_CONSENTS = ("agreement31-122", "agreement30-121", "agreement74-213")
 CONSENT_TERMS_LABEL = xpath("//label[.//input[@name='agreement74-213']]")
 CONSENT_TERMS_INPUT = xpath("//input[@name='agreement74-213']")
 SUBMIT = css('form button[type="submit"]')
@@ -135,11 +139,15 @@ def _accept_consents(browser: Browser, _credentials: Credentials, consents: str)
     if consents == "all":
         browser.click(CONSENT_ALL_LABEL)
         return
-    browser.click(CONSENT_EXPAND)
-    browser.click(CONSENT_TERMS_LABEL)
-    if not browser.is_checked(CONSENT_TERMS_INPUT):
-        msg = "the required Regulamin checkbox did not get checked"
-        raise FlowAbortError(msg, ExitCode.PROVIDER_CHANGED, "provider-changed")
+    try:
+        browser.click(CONSENT_EXPAND, timeout=5)
+    except StepTimeoutError:
+        logger.info("the agreement expander is not present; the rows are already open")
+    for name in REQUIRED_CONSENTS:
+        browser.click(xpath(f"//label[.//input[@name='{name}']]"))
+        if not browser.is_checked(xpath(f"//input[@name='{name}']")):
+            msg = f"the required consent {name} did not get checked"
+            raise FlowAbortError(msg, ExitCode.PROVIDER_CHANGED, "provider-changed")
 
 
 def _submit(browser: Browser, _credentials: Credentials) -> None:
@@ -147,8 +155,8 @@ def _submit(browser: Browser, _credentials: Credentials) -> None:
 
 
 def _success(browser: Browser) -> bool:
-    url = browser.url()
-    if "poczta.interia.pl" in url and "/logowanie" not in url:
+    """Interia ends the signup on the webmail login page once the account exists."""
+    if "poczta.interia.pl" in browser.url():
         return True
     return browser.has(LOGGED_IN)
 

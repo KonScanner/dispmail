@@ -143,7 +143,7 @@ State: **harder than Tuta.**
 | 8 | Domain | `Nazwa domeny`, default `interia.pl`; 12 options; entitlement not yet confirmed |
 | 9 | Password | `#password`; 12–64 chars, letter + digit/symbol, not a common password |
 | 10 | Repeat password | `#rePassword` |
-| 11 | Consents | `agreementacceptAll-acceptAll` (single visible checkbox), `agreement31-122`, `agreement30-121`, `agreement74-213` (Regulamin, required); inputs are 0×0 → click the wrapping label and assert `is_selected()` |
+| 11 | Consents | all three **required** rows (`agreement31-122`, `agreement30-121`, `agreement74-213`) plus optional marketing rows; `required` checks the three with the red asterisk, `all` uses `agreementacceptAll-acceptAll`; inputs are 0×0 → click the wrapping label and assert `is_checked()` |
 | 12 | Submit | `form button[type="submit"]` text `ZAŁÓŻ DARMOWE KONTO`; reCAPTCHA executes here |
 | 13 | **After submit** | image CAPTCHA step, then mail/SMS verification; the account is not usable until those pass |
 

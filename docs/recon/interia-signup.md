@@ -98,6 +98,7 @@ entirely (verified: no `PRZEJDŹ DO SERWISU` button afterwards, control count 64
 | Hasło | “Hasło” | `input#password`, `name="password"`, `type=password`, `class="account-input"`, `autocomplete="new-password"` | `#password` | ✅ |
 | Password requirements | “Wymagania:” list | `.account-input__tips-header`, `ul.account-input__tips > li.account-input__tips--neutral` (with `i.marker`), text items | read `#password` container text | ⚠️ |
 | Powtórz hasło | “Powtórz hasło” | `input#rePassword`, `name="rePassword"`, `type=password` | `#rePassword` | ✅ |
+| Required rows | three rows marked with a red asterisk: commercial information (`agreement31-122`), personal-data marketing (`agreement30-121`), Regulamin (`agreement74-213`) |
 | Accept-all | “Akceptuję i zaznaczam wszystkie poniższe zgody” | `input#`(none)`name="agreementacceptAll-acceptAll"`, `class="checkbox"`, rendered 0×0; wrapping `label.checkbox-container` | `input[name="agreementacceptAll-acceptAll"]` / click its `label` | ✅ name · ⚠️ click target |
 | Marketing consent | “Wyrażam zgodę na otrzymywanie informacji handlowych…” | `input name="agreement31-122"`, label class `checkbox-container checkbox-container--required` | `input[name="agreement31-122"]` | ✅ name (ID suffix from API) |
 | Personal-data marketing | “Wyrażam zgodę na przetwarzanie danych osobowych w celach marketingowych…” | `input name="agreement30-121"` | `input[name="agreement30-121"]` | ✅ |
