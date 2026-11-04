@@ -164,7 +164,7 @@ class Settings:
     timeout: float = 10.0
     navigation_timeout: float = 30.0
     submit_timeout: float = 60.0
-    assist_timeout: float = 600.0
+    assist_timeout: float = 1800.0
     recovery_timeout: float = 20.0
     weekly_limit: int = 4
     username_timeout: float = 12.0
@@ -201,7 +201,7 @@ class Settings:
             timeout=env_float("DISPMAIL_TIMEOUT", 10.0),
             navigation_timeout=env_float("DISPMAIL_NAVIGATION_TIMEOUT", 30.0),
             submit_timeout=env_float("DISPMAIL_SUBMIT_TIMEOUT", 60.0),
-            assist_timeout=env_float("DISPMAIL_ASSIST_TIMEOUT", 600.0),
+            assist_timeout=env_float("DISPMAIL_ASSIST_TIMEOUT", 1800.0),
             recovery_timeout=env_float("DISPMAIL_RECOVERY_TIMEOUT", 20.0),
             weekly_limit=env_int("DISPMAIL_WEEKLY_LIMIT", 4),
             username_timeout=env_float("DISPMAIL_USERNAME_TIMEOUT", 12.0),
