@@ -237,11 +237,7 @@ class FlowRunner:
                 egress=facts,
             )
 
-        account_email = f"{creds.username}@{spec.email_domain}"
         pending: Path | None = None
-        if self.settings.submit:
-            pending = self.store.stash_pending(Account(account_email, creds.password), spec.name)
-            logger.info("credentials held at %s until submit is confirmed", pending)
 
         self.browser.goto(spec.url)
         for step in spec.steps:
@@ -486,6 +482,7 @@ class FlowRunner:
         challenge: ChallengeSignature,
     ) -> FlowResult | None:
         """Return ``None`` when assisted mode cleared it, else the CHALLENGE result."""
+        logger.warning("challenge detected: %s", challenge.description)
         artifacts.write_event(
             {
                 "event": "challenge",
@@ -552,7 +549,8 @@ class FlowRunner:
 
     def _wait_for_challenge_clear(self, spec: ProviderSpec) -> bool:
         logger.warning(
-            "solve the challenge in the browser window; the run waits up to %.0f seconds",
+            "solve the challenge in the browser window (reCAPTCHA: select the requested "
+            "images, then click ZWERYFIKUJ); the run waits up to %.0f seconds",
             self.settings.assist_timeout,
         )
         deadline = time.monotonic() + self.settings.assist_timeout
