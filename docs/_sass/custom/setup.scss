@@ -1,0 +1,27 @@
+// DispMail site palette and type, applied before the theme's colour scheme.
+// Light values only: the dark scheme keeps its own palette, with small tweaks in custom.scss.
+
+$accent-color: #1e4d40;
+$rule-color: #dee1da;
+
+$body-background-color: #fbfbf9;
+$body-heading-color: #14181a;
+$body-text-color: #2c3438;
+$link-color: #1e4d40;
+$nav-child-link-color: #3a4448;
+$sidebar-color: #f3f4ef;
+$border-color: #dee1da;
+$code-background-color: #f2f3ee;
+$table-background-color: #ffffff;
+$search-background-color: #ffffff;
+$feedback-color: #eceee7;
+
+$body-font-family:
+  ui-sans-serif, system-ui, -apple-system, "Segoe UI", roboto, "Helvetica Neue", arial,
+  sans-serif;
+$mono-font-family: ui-monospace, "SFMono-Regular", menlo, consolas, monospace;
+
+$body-line-height: 1.6;
+$content-line-height: 1.65;
+$content-width: 46rem;
+$nav-width: 15rem;

@@ -1,7 +1,14 @@
+---
+layout: default
+title: Provider rework
+parent: Design
+nav_order: 3
+description: "Every signup step, selector and blocker."
+---
+
 # Plan: provider path rework
 
-Status: **proposed, pending go-ahead.** Selectors were captured from the live sites on
-2026-11-03; raw evidence is in `docs/recon/` (screenshots + full HTML snapshots).
+Status: **implemented.** Both paths were walked against the live sites. Raw evidence is in `docs/recon/`.
 
 ## 0. What is actually broken today
 

@@ -1,9 +1,14 @@
+---
+layout: default
+title: Egress and fingerprint
+parent: Design
+nav_order: 2
+description: "Egress check, persona, budgets, challenge policy."
+---
+
 # Plan: egress, fingerprint and challenge handling
 
-Status: **agreed in the grill session, not yet implemented.** This document is the
-blueprint for the parts of the rewrite that decide whether a signup is accepted or
-challenged. Everything here is derived from the decision log below; change the log
-before changing the design.
+Status: **implemented.** This document is the design record behind `browser.py`, `ledger.py` and `credentials.py`.
 
 ## 0. Decision log
 
