@@ -68,7 +68,7 @@ captured step (the old `mail.tutanota.com/login` is gone).
 | 8 | Attestation | checkbox labelled `I do not own any other Free Tuta account and I will not use this account for business.` | legal statement; live run requires `--accept-attestation` |
 | 9 | Terms | checkbox labelled `I have read and agree to the following documents:` | required |
 | 10 | Create account | `button[data-testid="btn:create_new_account_label"]` | enabled after **both checkboxes** are ticked, but ~200 ms after the DOM state changes — poll `wait_enabled`, never check once; username/password validation happens on submit. This is the **submit step** (live gate) |
-| 11 | Recovery Kit | step 3 of the wizard, `button[aria-label="Recovery Kit"]` becomes enabled | capture the recovery code; account is unrecoverable without it |
+| 11 | Recovery Kit | step 3 of the wizard, `button[aria-label="Recovery Kit"]` becomes enabled | the code is 64 hex chars in 16 groups of four; poll the page text for it (up to `DISPMAIL_RECOVERY_TIMEOUT`), store it, and keep the account row if it never renders |
 | 12 | Success | recovery-kit text present and/or inbox URL | insert into `data/sqlite.db` and write `data/recovery_<email>_<platform>.txt` |
 
 Entry/stack details: single-URL SPA state machine, no iframes, no shadow DOM, no cookie
@@ -199,8 +199,9 @@ mapping.
 
 ## 6. Known unknowns (resolve during implementation, not by guessing)
 
-- Tuta: recovery-kit markup and the post-create button; password rule; whether
-  anything appears on submit (no evidence of a captcha in the bundle).
+- Tuta: the recovery code is verified: 64 hex characters, 16 groups of four, shown with
+  `Copy Recovery Code` / `Download PDF-file`. Still unknown: the exact post-create button that
+  leaves the kit screen, and the password rule.
 - Live-verified so far: plan selection, username availability, free-domain choice,
   password fill and both agreements all work; a dry-run stops cleanly before submit.
 - Interia: whether the free plan restricts the domain to `interia.pl`; whether the

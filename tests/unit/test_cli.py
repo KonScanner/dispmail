@@ -120,7 +120,9 @@ def test_read_empty(tmp_path, capsys) -> None:
 def _live_browser() -> FakeBrowser:
     browser = FakeBrowser()
     browser.url_after_click[tuta.CREATE.selector] = "https://app.tuta.com/mail"
-    browser.texts["xpath=//body"] = "ABCD-EFGH-IJKL-MNOP"
+    browser.texts["xpath=//body"] = (
+        "fa54 7805 6b94 bfca 4d3c 56dd 14f7 6b84 a4b2 d777 c443 fdde 18d7 6017 5b70 0c74"
+    )
     return browser
 
 
@@ -143,6 +145,7 @@ def _run_args(tmp_path, *extra: str) -> list[str]:
 
 
 def test_run_json_masks_secrets(monkeypatch, tmp_path, capsys) -> None:
+    monkeypatch.setenv("DISPMAIL_RECOVERY_TIMEOUT", "0.2")
     monkeypatch.setattr(cli, "open_browser", lambda _settings, _persona, **_kwargs: _live_browser())
     monkeypatch.setattr(cli, "HttpEgressProbe", FakeProbe)
     code = cli.main(_run_args(tmp_path))
@@ -153,13 +156,16 @@ def test_run_json_masks_secrets(monkeypatch, tmp_path, capsys) -> None:
 
 
 def test_run_json_show_passwords(monkeypatch, tmp_path, capsys) -> None:
+    monkeypatch.setenv("DISPMAIL_RECOVERY_TIMEOUT", "0.2")
     monkeypatch.setattr(cli, "open_browser", lambda _settings, _persona, **_kwargs: _live_browser())
     monkeypatch.setattr(cli, "HttpEgressProbe", FakeProbe)
     code = cli.main([*_run_args(tmp_path), "--show-passwords"])
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     assert payload["account"]["password"] != "********"
-    assert payload["account"]["recovery"] == "ABCD-EFGH-IJKL-MNOP"
+    assert payload["account"]["recovery"] == (
+        "fa54 7805 6b94 bfca 4d3c 56dd 14f7 6b84 a4b2 d777 c443 fdde 18d7 6017 5b70 0c74"
+    )
 
 
 def test_assisted_requires_headed() -> None:

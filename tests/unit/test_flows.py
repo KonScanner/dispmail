@@ -40,7 +40,9 @@ def test_live_tuta_creates_and_records_account(tmp_path) -> None:
     settings = make_settings(tmp_path, submit=True, accept_attestation=True)
     browser = FakeBrowser()
     browser.url_after_click[tuta.CREATE.selector] = "https://app.tuta.com/mail"
-    browser.texts["xpath=//body"] = "Recovery Kit ABCD-EFGH-IJKL-MNOP"
+    browser.texts["xpath=//body"] = (
+        "fa54 7805 6b94 bfca 4d3c 56dd 14f7 6b84 a4b2 d777 c443 fdde 18d7 6017 5b70 0c74"
+    )
     credentials = generate(rng=Random(7))
     result = _runner(settings, browser).run(tuta.build(), credentials=credentials)
     assert result.exit_code is ExitCode.OK
@@ -50,11 +52,13 @@ def test_live_tuta_creates_and_records_account(tmp_path) -> None:
     assert len(rows) == 1
     assert rows[0].email == f"{credentials.username}@tutamail.com"
     assert rows[0].password == credentials.password
-    assert rows[0].recovery == "ABCD-EFGH-IJKL-MNOP"
+    assert rows[0].recovery == (
+        "fa54 7805 6b94 bfca 4d3c 56dd 14f7 6b84 a4b2 d777 c443 fdde 18d7 6017 5b70 0c74"
+    )
     assert rows[0].platform == "tuta"
     recovery_path = rows[0].recovery_path(settings.data_dir)
     assert recovery_path is not None
-    assert recovery_path.read_text(encoding="utf-8").strip() == "ABCD-EFGH-IJKL-MNOP"
+    assert recovery_path.read_text(encoding="utf-8").strip().startswith("fa54 7805")
 
 
 def test_live_requires_attestation(tmp_path) -> None:
@@ -293,3 +297,16 @@ def test_provider_failure_text_is_classified_quickly(tmp_path) -> None:
     assert result.outcome == "provider-error"
     assert "Could not reach server" in result.detail
     assert list((tmp_path / "data").glob("pending_*.txt"))
+
+
+def test_tuta_recovery_pattern_normalises_the_code(tmp_path) -> None:
+    browser = FakeBrowser()
+    browser.texts["xpath=//body"] = (
+        "Your unique 64-character recovery code:\n"
+        "FA54 7805 6B94 BFCA\n4D3C 56DD 14F7 6B84\n"
+        "A4B2 D777 C443 FDDE\n18D7 6017 5B70 0C74\n"
+    )
+    code = tuta._recovery(browser)
+    assert code == (
+        "fa54 7805 6b94 bfca 4d3c 56dd 14f7 6b84 a4b2 d777 c443 fdde 18d7 6017 5b70 0c74"
+    )

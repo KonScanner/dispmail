@@ -43,7 +43,11 @@ banner.** x-frame-options: DENY, x-content-type-options: nosniff, no Cloudflare 
    Repeat password, 2 mandatory agreements, `Create account` (disabled until both checkboxes are ticked).
    Sidebar still shows the three plan cards, Free constraints, and `See other plans`.
 4. **Recovery Kit** — step 3 of the wizard, reached only *after* clicking `Create account`.
-   **Not observed** (submitting is out of scope). Step names found in the signup bundle:
+   **Observed after this rewrite** (from the account's Settings → Login → Recovery code dialog,
+   which uses the same component): the code is **64 hexadecimal characters in 16 groups of
+   four**, shown over four lines, for example `fa54 7805 6b94 bfca / 4d3c ...`. The dialog
+   has `Copy Recovery Code`, `Download PDF-file` and `Ok`. The code is shown after a password
+   confirmation. Step names found in the signup bundle:
    `Select Plan`, `Create Account`, `Recovery Kit`, `Order Confirmation` (free skips Order Confirmation).
 
 **Wizard step indicator**: `button[aria-label="Free"]` (done, check icon), `button[aria-label="Create Account"]`
@@ -156,8 +160,11 @@ before clicking `Continue`. Navigation document: 302 then 200, ~310 ms TTFB/DOMC
 6. **`__deal_with_final_checkboxes()`** used `/html/body/div/div[2]/.../div[3]/div/input` and `/div[4]/div/input` —
    the two agreements are label-wrapped `input[type=checkbox]` with no id/name/aria; the absolute XPaths and
    the `div[3]`/`div[4]` indices are gone.
-7. **`__save_recovery()`** read `/html/body/div/div[2]/.../div[3]/div[2]` after account creation — the Recovery
-   Kit screen was **not reachable** in this recon (post-submit), so this selector is unverified.
+7. **`__save_recovery()`** read a positional div after account creation. The signup recovery
+   screen was not reachable in this recon, but the same recovery-code component was observed in
+   Settings: a 64-character hex code in 16 groups of four, with a `Copy Recovery Code` button.
+   The rewrite extracts that pattern from the page text and waits up to
+   `DISPMAIL_RECOVERY_TIMEOUT` (20 s) for it to render.
 8. **Selenium 3 API usage throughout** (`find_element_by_xpath`, `find_element_by_css_selector`,
    `find_element_by_class_name`) — removed in Selenium 4; must use `find_element(By.XPATH, ...)`.
    `options.headless = True` is deprecated (`--headless=new`), and

@@ -87,17 +87,18 @@ def _success(browser: Browser) -> bool:
     return browser.has(RECOVERY_BUTTON) and browser.is_enabled(RECOVERY_BUTTON)
 
 
-_RECOVERY_PATTERN = re.compile(r"[A-Z0-9]{4}(?:-[A-Z0-9]{4}){2,}")
+# Tuta shows 64 hex characters as 16 groups of four, space separated over four lines.
+_RECOVERY_PATTERN = re.compile(r"(?:[0-9a-f]{4}\s+){15}[0-9a-f]{4}", re.IGNORECASE)
 
 
 def _recovery(browser: Browser) -> str | None:
-    """Return only a strict recovery-code match; never guess from arbitrary text."""
-    body = browser.text_of(xpath("//body")).upper()
-    matches = _RECOVERY_PATTERN.findall(body)
-    if not matches:
-        logger.warning("no recovery code pattern found on the recovery kit page")
+    """Return the 64-character recovery code, normalised to one line of 4-char groups."""
+    body = browser.text_of(xpath("//body"))
+    match = _RECOVERY_PATTERN.search(body)
+    if match is None:
+        logger.warning("no recovery code found on the recovery kit page")
         return None
-    return max(matches, key=len)
+    return " ".join(match.group(0).split()).lower()
 
 
 def build(domain: str = "tutamail.com") -> ProviderSpec:

@@ -237,6 +237,37 @@ class AccountRepository:
     def clear_pending(self, email: str, platform: str) -> None:
         self.pending_path(email, platform).unlink(missing_ok=True)
 
+    def set_recovery(
+        self,
+        email: str,
+        recovery: str,
+        *,
+        extension: str = "txt",
+    ) -> StoredAccount:
+        """Attach a recovery kit to an existing account and write its file."""
+        with self._connect() as connection:
+            row = connection.execute("SELECT * FROM accounts WHERE email = ?", (email,)).fetchone()
+            if row is None:
+                msg = f"{email} is not in {self.db_path}"
+                raise AccountExistsError(msg)
+            account = _to_stored(row)
+            path = self._write_recovery(
+                Account(account.email, account.password, recovery),
+                account.platform,
+                extension,
+            )
+            connection.execute(
+                "UPDATE accounts SET recovery = ?, recovery_file = ? WHERE email = ?",
+                (recovery, path.name, email),
+            )
+            updated = connection.execute(
+                "SELECT * FROM accounts WHERE email = ?", (email,)
+            ).fetchone()
+        if updated is None:
+            msg = "the account disappeared after the update"
+            raise RuntimeError(msg)
+        return _to_stored(updated)
+
     def count(self) -> int:
         with self._connect() as connection:
             row = connection.execute("SELECT COUNT(*) AS total FROM accounts").fetchone()
