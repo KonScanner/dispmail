@@ -144,6 +144,7 @@ class Ledger:
         *,
         allow_replacement: bool = False,
         weekly_limit: int = 4,
+        ignore_cooldown: bool = False,
     ) -> None:
         """Raise :class:`BudgetError` when this run must not start."""
         recent = self.created_for(provider, since=datetime.now(UTC) - WEEKLY_WINDOW)
@@ -153,10 +154,11 @@ class Ledger:
                 "(pass --replace-account if an old account is gone)"
             )
             raise BudgetError(msg)
-        until = self.cooldown_until(provider, egress)
-        if until is not None and datetime.now(UTC) < until:
-            msg = f"{provider} on egress {egress!r} is cooling down until {until.isoformat()}"
-            raise BudgetError(msg)
+        if not ignore_cooldown:
+            until = self.cooldown_until(provider, egress)
+            if until is not None and datetime.now(UTC) < until:
+                msg = f"{provider} on egress {egress!r} is cooling down until {until.isoformat()}"
+                raise BudgetError(msg)
 
 
 def now_iso() -> str:
