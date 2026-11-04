@@ -1,0 +1,22 @@
+{%- assign site_url = site.url | append: site.baseurl -%}
+{%- if page.url == "/" %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "@id": "{{ site_url }}/#software",
+  "name": "DispMail",
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "Linux, macOS",
+  "url": "{{ site_url }}/",
+  "description": {{ site.description | jsonify }},
+  "codeRepository": "https://github.com/KonScanner/dispmail",
+  "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+{%- endif %}

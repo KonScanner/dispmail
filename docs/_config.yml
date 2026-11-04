@@ -3,11 +3,22 @@ description: Create one disposable mailbox without giving the provider your pers
 url: https://konscanner.github.io
 baseurl: /dispmail
 lang: en
+tagline: a disposable mailbox without personal data
 
 remote_theme: just-the-docs/just-the-docs
 plugins:
   - jekyll-remote-theme
   - jekyll-seo-tag
+  - jekyll-sitemap
+
+defaults:
+  - scope:
+      path: ""
+      type: pages
+    values:
+      image:
+        path: /assets/img/social-card.png
+        alt: "DispMail: create one disposable mailbox without giving the provider your personal data"
 
 color_scheme: light
 search_enabled: true
