@@ -60,6 +60,14 @@ def test_cooldown_after_one_challenge(tmp_path) -> None:
         ledger.check("tuta", "test")
 
 
+def test_cooldown_can_be_ignored(tmp_path) -> None:
+    ledger = Ledger(tmp_path)
+    ledger.record(attempt("tuta", "test", "challenge", 4, challenged=True))
+    with pytest.raises(BudgetError, match="cooling down"):
+        ledger.check("tuta", "test")
+    ledger.check("tuta", "test", ignore_cooldown=True)
+
+
 def test_second_challenge_extends_cooldown(tmp_path) -> None:
     ledger = Ledger(tmp_path)
     ledger.record(attempt("tuta", "test", "challenge", 4, challenged=True))

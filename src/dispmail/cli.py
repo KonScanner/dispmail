@@ -100,6 +100,12 @@ def _add_run_arguments(parser: argparse.ArgumentParser, name: str) -> None:
     parser.add_argument("--assist-timeout", type=float)
     parser.add_argument("--weekly-limit", type=_positive_int)
     parser.add_argument("--username-timeout", type=float)
+    parser.add_argument(
+        "--ignore-cooldown",
+        action="store_true",
+        default=None,
+        help="start the run even if this egress is cooling down",
+    )
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--artifacts-dir", type=Path)
     parser.add_argument("--state-dir", type=Path)
@@ -160,6 +166,7 @@ def _settings_from_args(args: argparse.Namespace) -> Settings:
         ("assisted", "assisted"),
         ("accept_attestation", "accept_attestation"),
         ("replace_account", "replace_account"),
+        ("ignore_cooldown", "ignore_cooldown"),
     ):
         value = getattr(args, flag, None)
         if value is not None:

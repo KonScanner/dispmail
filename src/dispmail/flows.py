@@ -198,6 +198,7 @@ class FlowRunner:
             self.settings.egress.name,
             allow_replacement=self.settings.replace_account,
             weekly_limit=self.settings.weekly_limit,
+            ignore_cooldown=self.settings.ignore_cooldown,
         )
         self.ledger.record(
             attempt(spec.name, self.settings.egress.name, "started", int(ExitCode.OK))
@@ -576,7 +577,7 @@ class FlowRunner:
             result.outcome,
             result.detail,
             egress=facts,
-            challenged=result.exit_code is ExitCode.CHALLENGE,
+            challenged=result.exit_code is ExitCode.CHALLENGE and self.settings.submit,
         )
 
     def _record(
@@ -592,6 +593,8 @@ class FlowRunner:
         challenged: bool = False,
         blocked: bool = False,
     ) -> FlowResult:
+        if exit_code is ExitCode.CHALLENGE and not self.settings.submit:
+            logger.warning("challenge during a dry run; no cooldown is recorded")
         try:
             self.ledger.record(
                 attempt(

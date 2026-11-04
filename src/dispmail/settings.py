@@ -168,6 +168,7 @@ class Settings:
     recovery_timeout: float = 20.0
     weekly_limit: int = 4
     username_timeout: float = 12.0
+    ignore_cooldown: bool = False
     manual: bool = False
     submit: bool = False
     assisted: bool = False
@@ -205,6 +206,7 @@ class Settings:
             recovery_timeout=env_float("DISPMAIL_RECOVERY_TIMEOUT", 20.0),
             weekly_limit=env_int("DISPMAIL_WEEKLY_LIMIT", 4),
             username_timeout=env_float("DISPMAIL_USERNAME_TIMEOUT", 12.0),
+            ignore_cooldown=env_bool("DISPMAIL_IGNORE_COOLDOWN", default=False),
             manual=env_bool("DISPMAIL_MANUAL", default=False),
             submit=env_bool("DISPMAIL_SUBMIT", default=False),
             assisted=env_bool("DISPMAIL_ASSISTED", default=False),
