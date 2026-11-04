@@ -99,6 +99,7 @@ def _add_run_arguments(parser: argparse.ArgumentParser, name: str) -> None:
     parser.add_argument("--timeout", type=float)
     parser.add_argument("--assist-timeout", type=float)
     parser.add_argument("--weekly-limit", type=_positive_int)
+    parser.add_argument("--username-timeout", type=float)
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--artifacts-dir", type=Path)
     parser.add_argument("--state-dir", type=Path)
@@ -167,6 +168,7 @@ def _settings_from_args(args: argparse.Namespace) -> Settings:
         "timeout": "timeout",
         "assist_timeout": "assist_timeout",
         "weekly_limit": "weekly_limit",
+        "username_timeout": "username_timeout",
         "data_dir": "data_dir",
         "artifacts_dir": "artifacts_dir",
         "state_dir": "state_dir",
@@ -192,14 +194,17 @@ def _settings_from_args(args: argparse.Namespace) -> Settings:
     return replace(settings, **overrides)
 
 
-def _build_spec(args: argparse.Namespace) -> ProviderSpec:
+def _build_spec(args: argparse.Namespace, settings: Settings) -> ProviderSpec:
     if args.command == "tuta":
-        return BUILDERS["tuta"](domain=args.domain)
+        return BUILDERS["tuta"](
+            domain=args.domain,
+            username_timeout=settings.username_timeout,
+        )
     return BUILDERS["interia"](consents=args.consents)
 
 
 def _run(args: argparse.Namespace, settings: Settings) -> int:
-    spec = _build_spec(args)
+    spec = _build_spec(args, settings)
     if settings.submit and spec.needs_attestation and not settings.accept_attestation:
         _emit("error: this provider needs --accept-attestation for a live run", as_json=False)
         return int(ExitCode.USAGE)

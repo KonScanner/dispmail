@@ -3,7 +3,9 @@
 import secrets
 import string
 import unicodedata
+from collections.abc import Iterator
 from dataclasses import dataclass, field
+from itertools import islice
 from random import Random
 
 from faker import Faker
@@ -48,6 +50,7 @@ class Credentials:
     month: int
     year: int
     gender: str = "Pan"
+    alternatives: tuple[str, ...] = ()
 
 
 def ascii_slug(value: str) -> str:
@@ -67,14 +70,66 @@ def split_name(full_name: str) -> tuple[str, str]:
     return parts[0], parts[-1]
 
 
+def _normalise_username(value: str) -> str:
+    value = value.lower().strip("._-")
+    while ".." in value:
+        value = value.replace("..", ".")
+    while "__" in value:
+        value = value.replace("__", "_")
+    while "--" in value:
+        value = value.replace("--", "-")
+    return value[:_USERNAME_MAX]
+
+
+def username_candidates(first: str, last: str, rng: Random) -> Iterator[str]:
+    """Yield memorable local parts: name first, then the same with escalating numbers."""
+    first = ascii_slug(first) or "user"
+    last = ascii_slug(last) or "name"
+    bases = [
+        first + last,
+        f"{first}.{last}",
+        f"{first}_{last}",
+        f"{first[0]}.{last}",
+        f"{first}.{last[0]}",
+        f"{first[0]}{last}",
+    ]
+    rng.shuffle(bases)
+    seen: set[str] = set()
+
+    def remember(value: str) -> str | None:
+        cleaned = _normalise_username(value)
+        if len(cleaned) < _USERNAME_MIN or cleaned in seen:
+            return None
+        seen.add(cleaned)
+        return cleaned
+
+    for base in bases:
+        cleaned = remember(base)
+        if cleaned is not None:
+            yield cleaned
+
+    for digits in (1, 2, 3, 4, 6):
+        low = 1 if digits == 1 else 10 ** (digits - 1)
+        high = 9 if digits == 1 else 10**digits - 1
+        for _ in range(3):
+            number = str(rng.randint(low, high))
+            base = rng.choice(bases)
+            variant = rng.choice(
+                (
+                    base + number,
+                    number + base,
+                    first + number + last,
+                    f"{first}.{number}.{last}",
+                )
+            )
+            cleaned = remember(variant)
+            if cleaned is not None:
+                yield cleaned
+
+
 def make_username(first: str, last: str, rng: Random) -> str:
-    """Build a provider-safe local part from a name."""
-    suffix = str(rng.randint(1000, 999_999))
-    base = (ascii_slug(first) + ascii_slug(last))[: _USERNAME_MAX - len(suffix)] or "user"
-    username = base + suffix
-    while len(username) < _USERNAME_MIN:
-        username += str(rng.randint(0, 9))
-    return username
+    """The first, most memorable candidate."""
+    return next(username_candidates(first, last, rng))
 
 
 def make_password(rules: PasswordRules) -> str:
@@ -117,13 +172,15 @@ def generate(
     faker.seed_instance(rng.randint(0, 2**31 - 1))
     first, last = split_name(faker.name())
     day, month, year = make_birthday(rng)
+    candidates = list(islice(username_candidates(first, last, rng), 10))
     return Credentials(
         first_name=first,
         last_name=last,
-        username=make_username(first, last, rng),
+        username=candidates[0],
         password=make_password(rules),
         day=day,
         month=month,
         year=year,
         gender=rng.choice(("Pan", "Pani")),
+        alternatives=tuple(candidates[1:]),
     )

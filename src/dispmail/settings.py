@@ -22,6 +22,7 @@ class ExitCode(IntEnum):
     PROVIDER_CHANGED = 6
     REJECTED = 7
     EXISTS = 8
+    BLOCKED = 9
 
 
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
@@ -166,6 +167,7 @@ class Settings:
     assist_timeout: float = 600.0
     recovery_timeout: float = 20.0
     weekly_limit: int = 4
+    username_timeout: float = 12.0
     manual: bool = False
     submit: bool = False
     assisted: bool = False
@@ -202,6 +204,7 @@ class Settings:
             assist_timeout=env_float("DISPMAIL_ASSIST_TIMEOUT", 600.0),
             recovery_timeout=env_float("DISPMAIL_RECOVERY_TIMEOUT", 20.0),
             weekly_limit=env_int("DISPMAIL_WEEKLY_LIMIT", 4),
+            username_timeout=env_float("DISPMAIL_USERNAME_TIMEOUT", 12.0),
             manual=env_bool("DISPMAIL_MANUAL", default=False),
             submit=env_bool("DISPMAIL_SUBMIT", default=False),
             assisted=env_bool("DISPMAIL_ASSISTED", default=False),
