@@ -43,4 +43,4 @@ Both providers limit free accounts per person. DispMail cannot check that you co
 tool records the attestation you pass on the command line and enforces a local limit of four
 accounts per provider per seven days. The rest is your responsibility.
 
-Next: [Egress]({% link egress.md %}).
+Next: [Egress]({{ site.baseurl }}{% link egress.md %}).

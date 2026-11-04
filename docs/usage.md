@@ -77,7 +77,7 @@ uv run dispmail interia --submit --assisted --headed --state-dir ./.dispmail-sta
 | `--show-passwords` | Include the password and recovery key in `--json`. |
 
 `--data-dir`, `--artifacts-dir`, `--state-dir`, `--egress-*` and `--proxy-*` are accepted
-by every run command. The [egress page]({% link egress.md %}) explains the network flags.
+by every run command. The [egress page]({{ site.baseurl }}{% link egress.md %}) explains the network flags.
 
 ## Read the result
 
@@ -86,6 +86,6 @@ uv run dispmail read
 uv run dispmail read --platform tuta --json
 ```
 
-The [account data page]({% link data.md %}) lists the filters and the make targets.
+The [account data page]({{ site.baseurl }}{% link data.md %}) lists the filters and the make targets.
 
-Next: [Providers]({% link providers.md %}).
+Next: [Providers]({{ site.baseurl }}{% link providers.md %}).

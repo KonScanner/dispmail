@@ -60,4 +60,4 @@ uv run pytest --cov        # coverage, 80 percent gate
 3. Capture the page DOM and add the locator contract in `tests/contract/`.
 4. Run the dry path, then the assisted path.
 
-Next: [Design documents]({% link design.md %}).
+Next: [Design documents]({{ site.baseurl }}{% link design.md %}).

@@ -49,8 +49,8 @@ uv sync --all-groups
 uv run dispmail doctor
 ```
 
-Then read [Install]({% link install.md %}) for the details, or go straight to
-[Usage]({% link usage.md %}).
+Then read [Install]({{ site.baseurl }}{% link install.md %}) for the details, or go straight to
+[Usage]({{ site.baseurl }}{% link usage.md %}).
 
 ## Before you run it
 
@@ -58,5 +58,5 @@ One free account per person is the rule at both providers. DispMail cannot check
 follow it. It limits you to four accounts per provider in a rolling seven days and it
 records your acceptance of the provider terms. The rest is your responsibility.
 
-[Read the limits]({% link limits.md %}) for the weekly cap, the cooldowns and the exit
+[Read the limits]({{ site.baseurl }}{% link limits.md %}) for the weekly cap, the cooldowns and the exit
 codes.
