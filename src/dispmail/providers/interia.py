@@ -49,10 +49,12 @@ LAST_NAME = xpath(f"({IDENTITY_INPUTS})[2]")
 USERNAME = xpath(f"({IDENTITY_INPUTS})[3]")
 DAY = css("#birthdayDay")
 YEAR = css("#birthdayYear")
-MONTH_SELECT = xpath(
-    "//div[contains(@class,'account-select')][.//label[normalize-space()='Miesiąc']]"
-)
-GENDER_SELECT = xpath("//div[contains(@class,'account-input__label--gender')]")
+_MONTH_CONTAINER = "//div[contains(@class,'account-select')][.//label[normalize-space()='Miesiąc']]"
+_GENDER_CONTAINER = "//div[contains(@class,'account-input__label--gender')]"
+MONTH_SELECT = xpath(_MONTH_CONTAINER)
+GENDER_SELECT = xpath(_GENDER_CONTAINER)
+MONTH_OPTIONS = xpath(f"{_MONTH_CONTAINER}//ul[contains(@class,'account-select__options')]")
+GENDER_OPTIONS = xpath(f"{_GENDER_CONTAINER}//ul[contains(@class,'account-select__options')]")
 PASSWORD = css("#password")
 PASSWORD_REPEAT = css("#rePassword")
 CONSENT_ALL_LABEL = xpath("//label[.//input[@name='agreementacceptAll-acceptAll']]")
@@ -63,23 +65,12 @@ SUBMIT = css('form button[type="submit"]')
 LOGGED_IN = text("Wyloguj")
 
 
-OPEN_OPTIONS = xpath(
-    "//ul[contains(@class,'account-select__options') and contains(@class,'visible')]"
-)
-
-
 def month_option(month: str) -> Locator:
-    return xpath(
-        "//ul[contains(@class,'account-select__options') and contains(@class,'visible')]"
-        f"//li[.//span[normalize-space()='{month}']]"
-    )
+    return xpath(f"{_MONTH_CONTAINER}//li[.//span[normalize-space()='{month}']]")
 
 
 def gender_option(gender: str) -> Locator:
-    return xpath(
-        "//ul[contains(@class,'account-select__options') and contains(@class,'visible')]"
-        f"//li[.//span[normalize-space()='{gender}']]"
-    )
+    return xpath(f"{_GENDER_CONTAINER}//li[.//span[normalize-space()='{gender}']]")
 
 
 def _dismiss_modal(browser: Browser, _credentials: Credentials) -> None:
@@ -87,32 +78,48 @@ def _dismiss_modal(browser: Browser, _credentials: Credentials) -> None:
     browser.wait_for(css("form"), timeout=15)
 
 
-def _choose(browser: Browser, trigger: Locator, option: Locator) -> None:
-    """Open one custom select and choose an option, retrying once.
+def _choose(
+    browser: Browser,
+    trigger: Locator,
+    options: Locator,
+    option: Locator,
+) -> None:
+    """Open one custom select, choose an option, then make sure the list is closed.
 
-    Interia re-renders these selects while they animate; a single retry keeps the
-    flow deterministic without hiding a real DOM change (the second failure raises).
+    Interia re-renders these selects while they animate and can leave two option
+    lists open at once. Scoping every locator to its own select and closing the
+    list after the choice prevents strict-mode violations and click interception.
     """
     for attempt in range(2):
         try:
             browser.click(trigger, timeout=5)
-            browser.wait_for(OPEN_OPTIONS, timeout=5)
+            browser.wait_for(options, timeout=5)
             browser.click(option, timeout=5)
         except StepTimeoutError:
             if attempt == 1:
                 raise
             time.sleep(0.4)
         else:
-            return
+            break
+    try:
+        browser.wait_for(options, timeout=3, state="hidden")
+    except StepTimeoutError:
+        browser.click(trigger, timeout=3)
+        browser.wait_for(options, timeout=3, state="hidden")
 
 
 def _fill_identity(browser: Browser, credentials: Credentials) -> None:
     browser.fill(FIRST_NAME, credentials.first_name)
     browser.fill(LAST_NAME, credentials.last_name)
     browser.fill(DAY, str(credentials.day))
-    _choose(browser, MONTH_SELECT, month_option(MONTHS[credentials.month - 1]))
+    _choose(
+        browser,
+        MONTH_SELECT,
+        MONTH_OPTIONS,
+        month_option(MONTHS[credentials.month - 1]),
+    )
     browser.fill(YEAR, str(credentials.year))
-    _choose(browser, GENDER_SELECT, gender_option(credentials.gender))
+    _choose(browser, GENDER_SELECT, GENDER_OPTIONS, gender_option(credentials.gender))
 
 
 def _fill_username(browser: Browser, credentials: Credentials) -> None:
