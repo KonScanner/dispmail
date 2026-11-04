@@ -11,6 +11,7 @@ from dispmail.credentials import (
     make_password,
     make_username,
     split_name,
+    username_candidates,
 )
 
 
@@ -85,3 +86,28 @@ def test_generate_uses_provider_locale() -> None:
 def test_impossible_password_rules_are_rejected() -> None:
     with pytest.raises(ValueError, match="max_length"):
         make_password(PasswordRules(min_length=2, max_length=3))
+
+
+def test_username_candidates_vary_and_escalate() -> None:
+    candidates = list(username_candidates("Rachel", "Bauer", Random(3)))
+    assert candidates[0] in {
+        "rachelbauer",
+        "rachel.bauer",
+        "rachel_bauer",
+        "r.bauer",
+        "rachel.b",
+        "rbauer",
+    }
+    assert any(candidate.isalpha() for candidate in candidates)
+    assert any("." in candidate or "_" in candidate for candidate in candidates)
+    numbered = [c for c in candidates if any(ch.isdigit() for ch in c)]
+    assert numbered
+    first_number = numbered[0]
+    assert len(first_number) <= len("rachelbauer") + 1
+    assert all(set(c) <= set("abcdefghijklmnopqrstuvwxyz0123456789._-") for c in candidates)
+
+
+def test_generate_carries_alternatives() -> None:
+    credentials = generate(rng=Random(5))
+    assert credentials.alternatives
+    assert credentials.username not in credentials.alternatives

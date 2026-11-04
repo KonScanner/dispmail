@@ -6,6 +6,8 @@ The page is a single-URL React SPA; every element is re-queried after each step.
 
 import logging
 import re
+import time
+from dataclasses import replace
 from functools import partial
 from pathlib import Path
 
@@ -51,12 +53,37 @@ def _select_free(browser: Browser, _credentials: Credentials) -> None:
     browser.wait_for(USERNAME)
 
 
-def _fill_account(browser: Browser, credentials: Credentials, domain: str) -> None:
-    browser.fill(USERNAME, credentials.username)
-    if browser.has(NOT_AVAILABLE, timeout=2):
-        msg = f"username {credentials.username!r} is taken; re-run for a new identity"
-        raise FlowAbortError(msg, ExitCode.EXISTS, "exists")
-    browser.wait_for(AVAILABLE, timeout=10)
+def _status_available(browser: Browser, timeout: float) -> bool:
+    """Poll Tuta's inline availability message; unknown means try (submit re-validates)."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        content = browser.content().lower()
+        if "email address is not available" in content:
+            return False
+        if "email address is available" in content:
+            return True
+        if "verifying email address" in content:
+            time.sleep(0.3)
+            continue
+        time.sleep(0.3)
+    logger.warning("username availability did not settle; trying the candidate")
+    return True
+
+
+def _choose_username(browser: Browser, credentials: Credentials, timeout: float) -> Credentials:
+    candidates = (credentials.username, *credentials.alternatives)[:6]
+    for username in candidates:
+        browser.fill(USERNAME, username)
+        if _status_available(browser, timeout):
+            return replace(credentials, username=username, alternatives=())
+    msg = f"none of the {len(candidates)} generated usernames were available"
+    raise FlowAbortError(msg, ExitCode.EXISTS, "exists")
+
+
+def _fill_account(
+    browser: Browser, credentials: Credentials, domain: str, timeout: float
+) -> Credentials:
+    chosen = _choose_username(browser, credentials, timeout)
     browser.click(DOMAIN_BUTTON)
     browser.click(domain_option(domain))
     if browser.has(PAID_DOMAIN_MODAL, timeout=1.5):
@@ -73,6 +100,7 @@ def _fill_account(browser: Browser, credentials: Credentials, domain: str) -> No
         msg = "one of the two required agreements did not get checked"
         raise FlowAbortError(msg, ExitCode.PROVIDER_CHANGED, "provider-changed")
     browser.wait_enabled(CREATE, timeout=8)
+    return chosen
 
 
 def _submit(browser: Browser, _credentials: Credentials) -> None:
@@ -101,7 +129,7 @@ def _recovery(browser: Browser) -> str | None:
     return " ".join(match.group(0).split()).lower()
 
 
-def build(domain: str = "tutamail.com") -> ProviderSpec:
+def build(domain: str = "tutamail.com", *, username_timeout: float = 12.0) -> ProviderSpec:
     """Build the Tuta spec for one domain choice."""
     if domain not in DOMAINS:
         msg = f"unknown Tuta domain {domain!r}; choose one of {', '.join(DOMAINS)}"
@@ -113,7 +141,10 @@ def build(domain: str = "tutamail.com") -> ProviderSpec:
         email_domain=domain,
         steps=(
             Step("select-free-plan", _select_free),
-            Step("fill-account", partial(_fill_account, domain=domain)),
+            Step(
+                "fill-account",
+                partial(_fill_account, domain=domain, timeout=username_timeout),
+            ),
             Step("create-account", _submit, StepKind.SUBMIT),
         ),
         success=_success,
@@ -126,7 +157,8 @@ def build(domain: str = "tutamail.com") -> ProviderSpec:
         plans=("free",),
         domains=DOMAINS,
         recovery=_recovery,
-        failure_text="Could not reach server",
+        failure_texts=("Could not reach server",),
+        blocked_texts=("Registration is temporarily blocked",),
     )
 
 

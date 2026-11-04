@@ -149,7 +149,7 @@ a workspace `.dispmail-state/` in tests; gitignored).
   the limit for a lost account. The ledger also enforces max 1 run at a time (`flock`
   on `run.lock`).
 - Cooldowns: a challenge sets a 24 h cooldown for `(provider, egress)`; a second
-  challenge sets 7 days and requires `--review-cooldown`.
+  challenge sets 7 days. A provider IP block sets a 7-day cooldown immediately.
 - Human-ish input: per-character delay 40–120 ms, step dwell 0.8–2.5 s, one short
   scroll before submit. Deterministic under `--seed` for tests.
 
@@ -175,7 +175,8 @@ selector) plus generic Cloudflare/Turnstile markers. On detection:
 | 5 | BUDGET | cap/cooldown/lock | abort with the reason |
 | 6 | PROVIDER_CHANGED | expected element missing after bounded waits, no challenge markers | save DOM, docs say: re-run recon |
 | 7 | REJECTED | provider validation error after submit | record, print fields, no retry |
-| 8 | EXISTS | username taken / duplicate account | regenerate username, retry once |
+| 8 | EXISTS | all generated usernames taken | stop; a new run generates new candidates |
+| 9 | BLOCKED | provider blocks the IP ("registration is temporarily blocked") | 7-day cooldown for that (provider, egress); stop |
 
 `PROVIDER_CHANGED` vs `BLOCKED`: a navigation returning 403/429 or a provider error
 page is reported as `EGRESS_MISMATCH`/`BLOCKED`; a timeout with a normal page means

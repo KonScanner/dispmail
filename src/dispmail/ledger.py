@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 CHALLENGE_COOLDOWN = timedelta(hours=24)
 SECOND_CHALLENGE_COOLDOWN = timedelta(days=7)
+BLOCK_COOLDOWN = timedelta(days=7)
 CHALLENGE_WINDOW = timedelta(days=30)
 WEEKLY_WINDOW = timedelta(days=7)
 
@@ -34,6 +35,7 @@ class Attempt:
     outcome: str
     exit_code: int
     challenged: bool = False
+    blocked: bool = False
     account_hash: str | None = None
     detail: str = ""
 
@@ -102,6 +104,17 @@ class Ledger:
             and (since is None or attempt.when >= since)
         ]
 
+    def blocked_for(self, provider: str, egress: str) -> list[Attempt]:
+        cutoff = datetime.now(UTC) - CHALLENGE_WINDOW
+        return [
+            attempt
+            for attempt in self.read()
+            if attempt.provider == provider
+            and attempt.egress == egress
+            and attempt.blocked
+            and attempt.when >= cutoff
+        ]
+
     def challenges_for(self, provider: str, egress: str) -> list[Attempt]:
         cutoff = datetime.now(UTC) - CHALLENGE_WINDOW
         return [
@@ -114,11 +127,15 @@ class Ledger:
         ]
 
     def cooldown_until(self, provider: str, egress: str) -> datetime | None:
+        until: list[datetime] = []
         challenges = self.challenges_for(provider, egress)
-        if not challenges:
-            return None
-        window = CHALLENGE_COOLDOWN if len(challenges) == 1 else SECOND_CHALLENGE_COOLDOWN
-        return max(challenge.when for challenge in challenges) + window
+        if challenges:
+            window = CHALLENGE_COOLDOWN if len(challenges) == 1 else SECOND_CHALLENGE_COOLDOWN
+            until.append(max(challenge.when for challenge in challenges) + window)
+        blocked = self.blocked_for(provider, egress)
+        if blocked:
+            until.append(max(entry.when for entry in blocked) + BLOCK_COOLDOWN)
+        return max(until) if until else None
 
     def check(
         self,
@@ -153,6 +170,7 @@ def attempt(
     exit_code: int,
     *,
     challenged: bool = False,
+    blocked: bool = False,
     account_hash: str | None = None,
     detail: str = "",
     ts: str | None = None,
@@ -164,6 +182,7 @@ def attempt(
         outcome=outcome,
         exit_code=exit_code,
         challenged=challenged,
+        blocked=blocked,
         account_hash=account_hash,
         detail=detail,
     )

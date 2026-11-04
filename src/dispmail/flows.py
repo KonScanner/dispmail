@@ -46,7 +46,7 @@ class Step:
     """One interaction; exactly one step per provider is the submit step."""
 
     name: str
-    action: Callable[[Browser, Credentials], None]
+    action: Callable[[Browser, Credentials], Credentials | None]
     kind: StepKind = StepKind.PREPARE
 
 
@@ -70,7 +70,8 @@ class ProviderSpec:
     domains: tuple[str, ...] = ()
     recovery: Callable[[Browser], str | None] | None = None
     recovery_extension: str = "txt"
-    failure_text: str | None = None
+    failure_texts: tuple[str, ...] = ()
+    blocked_texts: tuple[str, ...] = ()
 
     def submit_step(self) -> Step:
         for step in self.steps:
@@ -259,14 +260,32 @@ class FlowRunner:
                     f"stopped before submit step {step.name!r}",
                     egress=facts,
                 )
-            outcome = self._execute_step(spec, step, creds, artifacts)
+            if step.kind is StepKind.SUBMIT:
+                account_email = f"{creds.username}@{spec.email_domain}"
+                pending = self.store.stash_pending(
+                    Account(account_email, creds.password), spec.name
+                )
+                logger.info("credentials held at %s until submit is confirmed", pending)
+            creds, outcome = self._execute_step(spec, step, creds, artifacts)
             if outcome is not None:
                 return self._finish_failure(spec, artifacts, started, outcome, facts)
 
         wait_budget = (
             self.settings.assist_timeout if self.settings.assisted else self.settings.submit_timeout
         )
-        success, challenge, failure = self._wait_for_success(spec, wait_budget)
+        success, challenge, failure, blocked = self._wait_for_success(spec, wait_budget)
+        if blocked is not None:
+            artifacts.capture(self.browser, "blocked")
+            return self._record(
+                spec,
+                artifacts,
+                started,
+                ExitCode.BLOCKED,
+                "blocked",
+                blocked,
+                egress=facts,
+                blocked=True,
+            )
         if failure is not None:
             artifacts.capture(self.browser, "provider-error")
             return self._record(
@@ -307,7 +326,7 @@ class FlowRunner:
 
         recovery = self._extract_recovery(spec)
         account = Account(
-            email=account_email,
+            email=f"{creds.username}@{spec.email_domain}",
             password=creds.password,
             recovery=recovery,
         )
@@ -381,10 +400,11 @@ class FlowRunner:
                 value = None
             if value:
                 return value
-            if time.monotonic() >= deadline:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
                 logger.warning("could not extract the recovery kit; capture it manually")
                 return None
-            time.sleep(1)
+            time.sleep(min(1.0, remaining))
 
     def _execute_step(
         self,
@@ -392,14 +412,15 @@ class FlowRunner:
         step: Step,
         creds: Credentials,
         artifacts: Artifacts,
-    ) -> FlowResult | None:
+    ) -> tuple[Credentials, FlowResult | None]:
         logger.info("%s: %s", spec.name, step.name)
         artifacts.write_event({"event": "step-start", "provider": spec.name, "step": step.name})
         try:
-            step.action(self.browser, creds)
+            updated = step.action(self.browser, creds)
+            creds = updated or creds
         except FlowAbortError as exc:
             artifacts.capture(self.browser, f"{step.name}-aborted")
-            return FlowResult(
+            return creds, FlowResult(
                 provider=spec.name,
                 ok=False,
                 exit_code=exc.exit_code,
@@ -421,7 +442,7 @@ class FlowRunner:
                         step.action(self.browser, creds)
                     except Exception as retry_exc:
                         logger.exception("retrying %s after the handoff failed", step.name)
-                        return FlowResult(
+                        return creds, FlowResult(
                             provider=spec.name,
                             ok=False,
                             exit_code=ExitCode.FLOW_ERROR,
@@ -429,9 +450,9 @@ class FlowRunner:
                             detail=f"step {step.name!r} retry: {retry_exc}",
                             artifacts=artifacts.directory,
                         )
-                    return None
-                return self._challenge_result(spec, artifacts, challenge)
-            return FlowResult(
+                    return creds, None
+                return creds, self._challenge_result(spec, artifacts, challenge)
+            return creds, FlowResult(
                 provider=spec.name,
                 ok=False,
                 exit_code=ExitCode.PROVIDER_CHANGED,
@@ -442,7 +463,7 @@ class FlowRunner:
         except Exception as exc:  # classified at the step boundary
             logger.exception("step %s failed", step.name)
             artifacts.capture(self.browser, f"{step.name}-error")
-            return FlowResult(
+            return creds, FlowResult(
                 provider=spec.name,
                 ok=False,
                 exit_code=ExitCode.FLOW_ERROR,
@@ -454,8 +475,8 @@ class FlowRunner:
 
         challenge = detect(self.browser, spec.challenges + GENERIC_CHALLENGES)
         if challenge is None:
-            return None
-        return self._handle_challenge(spec, artifacts, step.name, challenge)
+            return creds, None
+        return creds, self._handle_challenge(spec, artifacts, step.name, challenge)
 
     def _handle_challenge(
         self,
@@ -497,29 +518,37 @@ class FlowRunner:
             artifacts=artifacts.directory if artifacts.directory.exists() else None,
         )
 
-    def _wait_for_success(
+    def _wait_for_success(  # noqa: C901 - one loop for success, block, failure and challenge
         self,
         spec: ProviderSpec,
         timeout: float,
-    ) -> tuple[bool, ChallengeSignature | None, str | None]:
+    ) -> tuple[bool, ChallengeSignature | None, str | None, str | None]:
         deadline = time.monotonic() + timeout
         assisted = self.settings.assisted and not self.settings.headless
         while time.monotonic() < deadline:
             try:
                 if spec.success(self.browser):
-                    return True, None, None
+                    return True, None, None, None
             except Exception:  # the page may be mid-navigation
                 logger.debug("success check raised; retrying", exc_info=True)
-            if spec.failure_text and spec.failure_text.lower() in self.browser.content().lower():
-                return False, None, f"provider reported: {spec.failure_text}"
+            content = self.browser.content().lower()
+            for blocked_text in spec.blocked_texts:
+                if blocked_text.lower() in content:
+                    return False, None, None, f"provider blocked this egress: {blocked_text}"
+            for failure_text in spec.failure_texts:
+                if failure_text.lower() in content:
+                    return False, None, f"provider reported: {failure_text}", None
             challenge = detect(self.browser, spec.challenges + GENERIC_CHALLENGES)
             if challenge is not None:
                 if not assisted:
-                    return False, challenge, None
+                    return False, challenge, None, None
                 if not self._wait_for_challenge_clear(spec):
-                    return False, challenge, None
-            time.sleep(1)
-        return False, None, None
+                    return False, challenge, None, None
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            time.sleep(min(1.0, remaining))
+        return False, None, None, None
 
     def _wait_for_challenge_clear(self, spec: ProviderSpec) -> bool:
         deadline = time.monotonic() + self.settings.assist_timeout
@@ -559,6 +588,7 @@ class FlowRunner:
         *,
         egress: EgressFacts | None = None,
         challenged: bool = False,
+        blocked: bool = False,
     ) -> FlowResult:
         try:
             self.ledger.record(
@@ -568,6 +598,7 @@ class FlowRunner:
                     outcome,
                     int(exit_code),
                     challenged=challenged,
+                    blocked=blocked,
                     detail=detail,
                 )
             )
