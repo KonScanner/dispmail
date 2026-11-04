@@ -113,21 +113,23 @@ def test_challenge_sets_cooldown_and_blocks_second_run(tmp_path) -> None:
     assert "cooling down" in second.detail
 
 
-def test_one_lifetime_account_per_provider(tmp_path) -> None:
+def test_weekly_limit_is_enforced(tmp_path) -> None:
     settings = make_settings(tmp_path)
     ledger = Ledger(settings.state_dir)
-    ledger.record(attempt("tuta", "test", "created", 0))
+    for _ in range(4):
+        ledger.record(attempt("tuta", "test", "created", 0))
     result = FlowRunner(
         FakeBrowser(), settings, FakeProbe(), AccountRepository(settings.data_dir), ledger
     ).run(tuta.build())
     assert result.exit_code is ExitCode.BUDGET
-    assert "one account" in result.detail
+    assert "4 accounts" in result.detail
 
 
-def test_replacement_allows_a_second_run(tmp_path) -> None:
+def test_replacement_allows_a_run_over_the_limit(tmp_path) -> None:
     settings = make_settings(tmp_path, replace_account=True)
     ledger = Ledger(settings.state_dir)
-    ledger.record(attempt("tuta", "test", "created", 0))
+    for _ in range(4):
+        ledger.record(attempt("tuta", "test", "created", 0))
     result = FlowRunner(
         FakeBrowser(), settings, FakeProbe(), AccountRepository(settings.data_dir), ledger
     ).run(tuta.build())
@@ -219,14 +221,23 @@ def test_a_blocking_challenge_beats_a_selector_timeout(tmp_path) -> None:
     assert result.outcome == "challenge"
 
 
-def test_database_inventory_blocks_a_second_run(tmp_path) -> None:
-    settings = make_settings(tmp_path)
+def test_database_inventory_blocks_a_run_over_the_limit(tmp_path) -> None:
+    settings = make_settings(tmp_path, weekly_limit=1)
     repository = AccountRepository(settings.data_dir)
     repository.add(Account("existing@tutamail.com", "pw"), platform="tuta")
     result = _runner(settings, FakeBrowser()).run(tuta.build())
     assert result.exit_code is ExitCode.BUDGET
-    assert "already has an account" in result.detail
+    assert "last 7 days" in result.detail
     assert repository.find()[0].email == "existing@tutamail.com"
+
+
+def test_one_recorded_account_still_allows_another_run(tmp_path) -> None:
+    settings = make_settings(tmp_path)
+    repository = AccountRepository(settings.data_dir)
+    repository.add(Account("existing@tutamail.com", "pw"), platform="tuta")
+    result = _runner(settings, FakeBrowser()).run(tuta.build())
+    assert result.exit_code is ExitCode.OK
+    assert result.outcome == "dry-run"
 
 
 def test_recovery_failure_still_records_the_account(tmp_path) -> None:

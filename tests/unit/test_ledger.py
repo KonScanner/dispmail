@@ -33,13 +33,23 @@ def test_corrupt_lines_are_skipped(tmp_path) -> None:
     assert len(ledger.read()) == 1
 
 
-def test_one_lifetime_account_per_provider(tmp_path) -> None:
+def test_weekly_limit_per_provider(tmp_path) -> None:
     ledger = Ledger(tmp_path)
-    ledger.record(attempt("tuta", "test", "created", 0))
-    with pytest.raises(BudgetError, match="one account"):
-        ledger.check("tuta", "test")
-    ledger.check("tuta", "test", allow_replacement=True)
-    ledger.check("interia", "test")
+    for _ in range(4):
+        ledger.record(attempt("tuta", "test", "created", 0))
+    with pytest.raises(BudgetError, match="4 accounts"):
+        ledger.check("tuta", "test", weekly_limit=4)
+    ledger.check("tuta", "test", weekly_limit=4, allow_replacement=True)
+    ledger.check("tuta", "test", weekly_limit=5)
+    ledger.check("interia", "test", weekly_limit=4)
+
+
+def test_accounts_older_than_a_week_do_not_count(tmp_path) -> None:
+    ledger = Ledger(tmp_path)
+    old = (datetime.now(UTC) - timedelta(days=8)).isoformat(timespec="seconds")
+    for _ in range(4):
+        ledger.record(attempt("tuta", "test", "created", 0, ts=old))
+    ledger.check("tuta", "test", weekly_limit=4)
 
 
 def test_cooldown_after_one_challenge(tmp_path) -> None:

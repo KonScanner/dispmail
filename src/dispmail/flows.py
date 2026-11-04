@@ -165,7 +165,7 @@ class FlowRunner:
                 artifacts=artifacts.directory if artifacts.directory.exists() else None,
             )
 
-    def _run_locked(  # noqa: C901, PLR0912 - the flow states are explicit on purpose
+    def _run_locked(  # noqa: C901, PLR0912, PLR0915 - the flow states are explicit on purpose
         self,
         spec: ProviderSpec,
         artifacts: Artifacts,
@@ -173,21 +173,30 @@ class FlowRunner:
         credentials: Credentials | None,
         rng: Random | None,
     ) -> FlowResult:
-        if self.store.find(platform=spec.name) and not self.settings.replace_account:
+        recent = self.store.find(platform=spec.name, since=self.settings.week_cutoff)
+        if len(recent) >= self.settings.weekly_limit and not self.settings.replace_account:
             return self._record(
                 spec,
                 artifacts,
                 started,
                 ExitCode.BUDGET,
                 "budget",
-                f"{spec.name} already has an account in {self.store.db_path}; "
-                "only one account per provider is allowed "
-                "(pass --replace-account if the old account is gone)",
+                f"{spec.name} has {len(recent)} accounts in the last 7 days "
+                f"(limit {self.settings.weekly_limit}); "
+                "pass --replace-account if an old account is gone",
+            )
+        if spec.needs_attestation and recent and self.settings.submit:
+            logger.warning(
+                "%s asks you to affirm one free account per person; %d account(s) exist "
+                "in the last 7 days",
+                spec.display,
+                len(recent),
             )
         self.ledger.check(
             spec.name,
             self.settings.egress.name,
             allow_replacement=self.settings.replace_account,
+            weekly_limit=self.settings.weekly_limit,
         )
         self.ledger.record(
             attempt(spec.name, self.settings.egress.name, "started", int(ExitCode.OK))
